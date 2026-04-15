@@ -16,30 +16,68 @@ DataProcessor::DataProcessor() {
 DataProcessor::~DataProcessor() {
 }
 
-std::wstring DataProcessor::FindNamesByGroup(int groupNumber, const std::vector<Participant>& participants) {
-    for (const auto& participant : participants) {
-        if (participant.groupNumber == groupNumber) {
-            return participant.maleName + L" " + participant.femaleName;
-        }
-    }
-    return L"";
-}
-
 bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
                                  const std::vector<ScoreEntry>& scoreEntries,
                                  std::vector<ResultEntry>& results) {
     results.clear();
+
+    if (participants.empty()) {
+        std::wcerr << L"Warning: No participants data available" << std::endl;
+    }
+
+    if (scoreEntries.empty()) {
+        std::wcerr << L"Warning: No score entries available" << std::endl;
+    }
+
+    std::unordered_map<int, std::wstring> maleMap;
+    std::unordered_map<int, std::wstring> femaleMap;
+
+    for (const auto& participant : participants) {
+        if (participant.maleGroupNumber >= 0 && !participant.maleName.empty()) {
+            maleMap[participant.maleGroupNumber] = participant.maleName;
+        }
+        if (participant.femaleGroupNumber >= 0 && !participant.femaleName.empty()) {
+            femaleMap[participant.femaleGroupNumber] = participant.femaleName;
+        }
+    }
 
     for (const auto& scoreEntry : scoreEntries) {
         ResultEntry result;
         result.rank = scoreEntry.rank;
         result.group = scoreEntry.group;
         result.time = scoreEntry.time;
-        result.names = FindNamesByGroup(scoreEntry.groupNumber, participants);
 
-        if (result.names.empty()) {
-            std::wcerr << L"Warning: Participant info not found for group " << scoreEntry.group << std::endl;
-            result.names = L"Unknown";
+        if (scoreEntry.groupNumber < 0) {
+            std::wcerr << L"Warning: Invalid group number for rank " << scoreEntry.rank << std::endl;
+            result.names = L"Invalid Group";
+        }
+        else {
+            std::wstring maleName;
+            std::wstring femaleName;
+
+            auto maleIt = maleMap.find(scoreEntry.groupNumber);
+            if (maleIt != maleMap.end()) {
+                maleName = maleIt->second;
+            }
+
+            auto femaleIt = femaleMap.find(scoreEntry.groupNumber);
+            if (femaleIt != femaleMap.end()) {
+                femaleName = femaleIt->second;
+            }
+
+            if (maleName.empty() && femaleName.empty()) {
+                std::wcerr << L"Warning: Participant info not found for group number " << scoreEntry.groupNumber << std::endl;
+                result.names = L"Unknown";
+            }
+            else if (maleName.empty()) {
+                result.names = femaleName;
+            }
+            else if (femaleName.empty()) {
+                result.names = maleName;
+            }
+            else {
+                result.names = maleName + L" " + femaleName;
+            }
         }
 
         results.push_back(result);
@@ -49,6 +87,10 @@ bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
 }
 
 bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
+    if (results.empty()) {
+        std::wcerr << L"Warning: No results to export" << std::endl;
+    }
+
     IDispatch* pExcelApp = NULL;
     IDispatch* pWorkbooks = NULL;
     IDispatch* pWorkbook = NULL;
@@ -187,10 +229,10 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
         cellValue.bstrVal = SysAllocString(value.c_str());
 
         VARIANT rangeArgs[2];
-        rangeArgs[0].vt = VT_I4;
-        rangeArgs[0].lVal = row;
         rangeArgs[1].vt = VT_I4;
-        rangeArgs[1].lVal = col;
+        rangeArgs[1].lVal = row;
+        rangeArgs[0].vt = VT_I4;
+        rangeArgs[0].lVal = col;
 
         DISPPARAMS dpRange;
         dpRange.cArgs = 2;
@@ -204,26 +246,57 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
         LPOLESTR cellsName = const_cast<LPOLESTR>(L"Cells");
         DISPID cellsDispID;
         HRESULT hrCells = pWorksheet->GetIDsOfNames(IID_NULL, &cellsName, 1, LOCALE_USER_DEFAULT, &cellsDispID);
-        if (SUCCEEDED(hrCells)) {
-            hrCells = pWorksheet->Invoke(cellsDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpRange, &varRange, NULL, NULL);
-            if (SUCCEEDED(hrCells) && varRange.vt == VT_DISPATCH) {
-                IDispatch* pCell = varRange.pdispVal;
-
-                LPOLESTR valueName = const_cast<LPOLESTR>(L"Value");
-                DISPID valueDispID;
-                HRESULT hrValue = pCell->GetIDsOfNames(IID_NULL, &valueName, 1, LOCALE_USER_DEFAULT, &valueDispID);
-                if (SUCCEEDED(hrValue)) {
-                    DISPPARAMS dpValue;
-                    dpValue.cArgs = 1;
-                    dpValue.rgvarg = &cellValue;
-                    dpValue.cNamedArgs = 0;
-                    dpValue.rgdispidNamedArgs = NULL;
-
-                    pCell->Invoke(valueDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dpValue, NULL, NULL, NULL);
-                }
-                pCell->Release();
-            }
+        if (FAILED(hrCells)) {
+            std::wcerr << L"Failed to get Cells property. HRESULT: " << hrCells << std::endl;
+            SysFreeString(cellValue.bstrVal);
+            return;
         }
+
+        hrCells = pWorksheet->Invoke(cellsDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpRange, &varRange, NULL, NULL);
+        if (FAILED(hrCells)) {
+            std::wcerr << L"Failed to get cell (" << row << L"," << col << L"). HRESULT: " << hrCells << std::endl;
+            VariantClear(&varRange);
+            SysFreeString(cellValue.bstrVal);
+            return;
+        }
+
+        if (varRange.vt != VT_DISPATCH) {
+            std::wcerr << L"Cell is not a dispatch object. Type: " << varRange.vt << std::endl;
+            VariantClear(&varRange);
+            SysFreeString(cellValue.bstrVal);
+            return;
+        }
+
+        IDispatch* pCell = varRange.pdispVal;
+
+        LPOLESTR valueName = const_cast<LPOLESTR>(L"Value");
+        DISPID valueDispID;
+        HRESULT hrValue = pCell->GetIDsOfNames(IID_NULL, &valueName, 1, LOCALE_USER_DEFAULT, &valueDispID);
+        if (FAILED(hrValue)) {
+            std::wcerr << L"Failed to get Value property. HRESULT: " << hrValue << std::endl;
+            pCell->Release();
+            VariantClear(&varRange);
+            SysFreeString(cellValue.bstrVal);
+            return;
+        }
+
+        DISPPARAMS dpValue;
+        DISPID dispidPut = DISPID_PROPERTYPUT;
+        dpValue.cArgs = 1;
+        dpValue.rgvarg = &cellValue;
+        dpValue.cNamedArgs = 1;
+        dpValue.rgdispidNamedArgs = &dispidPut;
+
+        VARIANT varResult;
+        VariantInit(&varResult);
+
+        hrValue = pCell->Invoke(valueDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dpValue, &varResult, NULL, NULL);
+        if (FAILED(hrValue)) {
+            std::wcerr << L"Failed to set cell value (" << row << L"," << col << L"). HRESULT: " << hrValue << std::endl;
+        }
+
+        VariantClear(&varResult);
+        pCell->Release();
         VariantClear(&varRange);
         SysFreeString(cellValue.bstrVal);
     };
@@ -235,10 +308,10 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
         cellValue.lVal = value;
 
         VARIANT rangeArgs[2];
-        rangeArgs[0].vt = VT_I4;
-        rangeArgs[0].lVal = row;
         rangeArgs[1].vt = VT_I4;
-        rangeArgs[1].lVal = col;
+        rangeArgs[1].lVal = row;
+        rangeArgs[0].vt = VT_I4;
+        rangeArgs[0].lVal = col;
 
         DISPPARAMS dpRange;
         dpRange.cArgs = 2;
@@ -252,26 +325,53 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
         LPOLESTR cellsName = const_cast<LPOLESTR>(L"Cells");
         DISPID cellsDispID;
         HRESULT hrCells = pWorksheet->GetIDsOfNames(IID_NULL, &cellsName, 1, LOCALE_USER_DEFAULT, &cellsDispID);
-        if (SUCCEEDED(hrCells)) {
-            hrCells = pWorksheet->Invoke(cellsDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpRange, &varRange, NULL, NULL);
-            if (SUCCEEDED(hrCells) && varRange.vt == VT_DISPATCH) {
-                IDispatch* pCell = varRange.pdispVal;
-
-                LPOLESTR valueName = const_cast<LPOLESTR>(L"Value");
-                DISPID valueDispID;
-                HRESULT hrValue = pCell->GetIDsOfNames(IID_NULL, &valueName, 1, LOCALE_USER_DEFAULT, &valueDispID);
-                if (SUCCEEDED(hrValue)) {
-                    DISPPARAMS dpValue;
-                    dpValue.cArgs = 1;
-                    dpValue.rgvarg = &cellValue;
-                    dpValue.cNamedArgs = 0;
-                    dpValue.rgdispidNamedArgs = NULL;
-
-                    pCell->Invoke(valueDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dpValue, NULL, NULL, NULL);
-                }
-                pCell->Release();
-            }
+        if (FAILED(hrCells)) {
+            std::wcerr << L"Failed to get Cells property. HRESULT: " << hrCells << std::endl;
+            return;
         }
+
+        hrCells = pWorksheet->Invoke(cellsDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpRange, &varRange, NULL, NULL);
+        if (FAILED(hrCells)) {
+            std::wcerr << L"Failed to get cell (" << row << L"," << col << L"). HRESULT: " << hrCells << std::endl;
+            VariantClear(&varRange);
+            return;
+        }
+
+        if (varRange.vt != VT_DISPATCH) {
+            std::wcerr << L"Cell is not a dispatch object. Type: " << varRange.vt << std::endl;
+            VariantClear(&varRange);
+            return;
+        }
+
+        IDispatch* pCell = varRange.pdispVal;
+
+        LPOLESTR valueName = const_cast<LPOLESTR>(L"Value");
+        DISPID valueDispID;
+        HRESULT hrValue = pCell->GetIDsOfNames(IID_NULL, &valueName, 1, LOCALE_USER_DEFAULT, &valueDispID);
+        if (FAILED(hrValue)) {
+            std::wcerr << L"Failed to get Value property. HRESULT: " << hrValue << std::endl;
+            pCell->Release();
+            VariantClear(&varRange);
+            return;
+        }
+
+        DISPPARAMS dpValue;
+        DISPID dispidPut = DISPID_PROPERTYPUT;
+        dpValue.cArgs = 1;
+        dpValue.rgvarg = &cellValue;
+        dpValue.cNamedArgs = 1;
+        dpValue.rgdispidNamedArgs = &dispidPut;
+
+        VARIANT varResult;
+        VariantInit(&varResult);
+
+        hrValue = pCell->Invoke(valueDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dpValue, &varResult, NULL, NULL);
+        if (FAILED(hrValue)) {
+            std::wcerr << L"Failed to set cell value (" << row << L"," << col << L"). HRESULT: " << hrValue << std::endl;
+        }
+
+        VariantClear(&varResult);
+        pCell->Release();
         VariantClear(&varRange);
     };
 
@@ -311,15 +411,12 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
     
     if (lowerPath.length() >= 5 && lowerPath.substr(lowerPath.length() - 5) == L".xlsx") {
         fileFormatValue = 51;
-        std::wcout << L"   Saving as Excel 2007+ format (.xlsx)" << std::endl;
     }
     else if (lowerPath.length() >= 4 && lowerPath.substr(lowerPath.length() - 4) == L".xls") {
         fileFormatValue = 56;
-        std::wcout << L"   Saving as Excel 97-2003 format (.xls)" << std::endl;
     }
     else {
         fileFormatValue = 56;
-        std::wcout << L"   Unknown extension, saving as Excel 97-2003 format (.xls)" << std::endl;
     }
 
     VARIANT fileFormat;
@@ -341,7 +438,7 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
     SysFreeString(filename.bstrVal);
 
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to save file: " << filePath << std::endl;
+        std::wcerr << L"Failed to save file. HRESULT: " << hr << std::endl;
         pWorksheet->Release();
         pWorksheets->Release();
         pWorkbook->Release();

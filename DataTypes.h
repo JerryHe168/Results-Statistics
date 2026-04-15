@@ -6,9 +6,10 @@
 struct Participant {
     std::wstring maleId;
     std::wstring maleName;
+    int maleGroupNumber;
     std::wstring femaleId;
     std::wstring femaleName;
-    int groupNumber;
+    int femaleGroupNumber;
 };
 
 struct ScoreEntry {
