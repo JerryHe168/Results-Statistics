@@ -267,7 +267,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         return false;
     }
 
-    if (varResult.vt != VT_ARRAY) {
+    if ((varResult.vt & VT_ARRAY) != VT_ARRAY) {
         std::wcerr << L"Cell data is not an array. Type: " << varResult.vt << std::endl;
         std::wcerr << L"This may happen if the worksheet is empty or has only one cell." << std::endl;
         
@@ -288,6 +288,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         return false;
     }
 
+    std::wcout << L"   Array type detected: " << varResult.vt << std::endl;
     SAFEARRAY* pSafeArray = varResult.parray;
     long lBound, uBound;
     SafeArrayGetLBound(pSafeArray, 1, &lBound);
@@ -626,7 +627,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         return false;
     }
 
-    if (varResult.vt != VT_ARRAY) {
+    if ((varResult.vt & VT_ARRAY) != VT_ARRAY) {
         std::wcerr << L"Cell data is not an array. Type: " << varResult.vt << std::endl;
         std::wcerr << L"This may happen if the worksheet is empty or has only one cell." << std::endl;
         
@@ -647,6 +648,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         return false;
     }
 
+    std::wcout << L"   Array type detected: " << varResult.vt << std::endl;
     SAFEARRAY* pSafeArray = varResult.parray;
     long lBound, uBound;
     SafeArrayGetLBound(pSafeArray, 1, &lBound);
