@@ -305,10 +305,27 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
     filename.vt = VT_BSTR;
     filename.bstrVal = SysAllocString(filePath.c_str());
 
+    int fileFormatValue = 56;
+    std::wstring lowerPath = filePath;
+    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
+    
+    if (lowerPath.length() >= 5 && lowerPath.substr(lowerPath.length() - 5) == L".xlsx") {
+        fileFormatValue = 51;
+        std::wcout << L"   Saving as Excel 2007+ format (.xlsx)" << std::endl;
+    }
+    else if (lowerPath.length() >= 4 && lowerPath.substr(lowerPath.length() - 4) == L".xls") {
+        fileFormatValue = 56;
+        std::wcout << L"   Saving as Excel 97-2003 format (.xls)" << std::endl;
+    }
+    else {
+        fileFormatValue = 56;
+        std::wcout << L"   Unknown extension, saving as Excel 97-2003 format (.xls)" << std::endl;
+    }
+
     VARIANT fileFormat;
     VariantInit(&fileFormat);
     fileFormat.vt = VT_I4;
-    fileFormat.lVal = 56;
+    fileFormat.lVal = fileFormatValue;
 
     VARIANT argsSave[2];
     argsSave[1] = filename;
