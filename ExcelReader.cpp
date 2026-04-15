@@ -38,13 +38,13 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     CLSID clsid;
     HRESULT hr = CLSIDFromProgID(L"Excel.Application", &clsid);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to create Excel application instance" << std::endl;
+        std::wcerr << L"Failed to create Excel application instance. HRESULT: " << hr << std::endl;
         return false;
     }
 
     hr = CoCreateInstance(clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch, (void**)&pExcelApp);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to start Excel" << std::endl;
+        std::wcerr << L"Failed to start Excel. HRESULT: " << hr << std::endl;
         return false;
     }
 
@@ -66,7 +66,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     ptName = const_cast<LPOLESTR>(L"Workbooks");
     hr = pExcelApp->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks property" << std::endl;
+        std::wcerr << L"Failed to get Workbooks property. HRESULT: " << hr << std::endl;
         pExcelApp->Release();
         return false;
     }
@@ -76,7 +76,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
     hr = pExcelApp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks collection" << std::endl;
+        std::wcerr << L"Failed to get Workbooks collection. HRESULT: " << hr << std::endl;
         pExcelApp->Release();
         return false;
     }
@@ -85,7 +85,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     ptName = const_cast<LPOLESTR>(L"Open");
     hr = pWorkbooks->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Open method" << std::endl;
+        std::wcerr << L"Failed to get Open method. HRESULT: " << hr << std::endl;
         pWorkbooks->Release();
         pExcelApp->Release();
         return false;
@@ -110,7 +110,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     SysFreeString(filename.bstrVal);
 
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to open file: " << filePath << std::endl;
+        std::wcerr << L"Failed to open file: " << filePath << L". HRESULT: " << hr << std::endl;
         pWorkbooks->Release();
         pExcelApp->Release();
         return false;
@@ -120,7 +120,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     ptName = const_cast<LPOLESTR>(L"Worksheets");
     hr = pWorkbook->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets property" << std::endl;
+        std::wcerr << L"Failed to get Worksheets property. HRESULT: " << hr << std::endl;
         pWorkbook->Release();
         pWorkbooks->Release();
         pExcelApp->Release();
@@ -130,7 +130,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     VariantInit(&result);
     hr = pWorkbook->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets collection" << std::endl;
+        std::wcerr << L"Failed to get Worksheets collection. HRESULT: " << hr << std::endl;
         pWorkbook->Release();
         pWorkbooks->Release();
         pExcelApp->Release();
@@ -146,7 +146,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     ptName = const_cast<LPOLESTR>(L"Item");
     hr = pWorksheets->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Item method" << std::endl;
+        std::wcerr << L"Failed to get Item method. HRESULT: " << hr << std::endl;
         pWorksheets->Release();
         pWorkbook->Release();
         pWorkbooks->Release();
@@ -166,7 +166,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     VariantInit(&result);
     hr = pWorksheets->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpItem, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get worksheet" << std::endl;
+        std::wcerr << L"Failed to get worksheet. HRESULT: " << hr << std::endl;
         pWorksheets->Release();
         pWorkbook->Release();
         pWorkbooks->Release();
@@ -178,7 +178,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     ptName = const_cast<LPOLESTR>(L"UsedRange");
     hr = pWorksheet->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange property" << std::endl;
+        std::wcerr << L"Failed to get UsedRange property. HRESULT: " << hr << std::endl;
         pWorksheet->Release();
         pWorksheets->Release();
         pWorkbook->Release();
@@ -190,7 +190,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     VariantInit(&result);
     hr = pWorksheet->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange" << std::endl;
+        std::wcerr << L"Failed to get UsedRange. HRESULT: " << hr << std::endl;
         pWorksheet->Release();
         pWorksheets->Release();
         pWorkbook->Release();
@@ -200,10 +200,45 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     }
     pRange = result.pdispVal;
 
+    ptName = const_cast<LPOLESTR>(L"Rows");
+    hr = pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    if (SUCCEEDED(hr)) {
+        VARIANT rowsResult;
+        VariantInit(&rowsResult);
+        hr = pRange->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &rowsResult, NULL, NULL);
+        if (SUCCEEDED(hr) && rowsResult.vt == VT_DISPATCH) {
+            IDispatch* pRows = rowsResult.pdispVal;
+            LPOLESTR countName = const_cast<LPOLESTR>(L"Count");
+            DISPID countDispID;
+            hr = pRows->GetIDsOfNames(IID_NULL, &countName, 1, LOCALE_USER_DEFAULT, &countDispID);
+            if (SUCCEEDED(hr)) {
+                VARIANT countResult;
+                VariantInit(&countResult);
+                hr = pRows->Invoke(countDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &countResult, NULL, NULL);
+                if (SUCCEEDED(hr)) {
+                    long rowCount = 0;
+                    if (countResult.vt == VT_I4) {
+                        rowCount = countResult.lVal;
+                    }
+                    else if (countResult.vt == VT_I2) {
+                        rowCount = countResult.iVal;
+                    }
+                    std::wcout << L"   Worksheet has " << rowCount << L" rows" << std::endl;
+                    if (rowCount <= 1) {
+                        std::wcerr << L"Warning: Worksheet appears to be empty or has only header row" << std::endl;
+                    }
+                }
+                VariantClear(&countResult);
+            }
+            pRows->Release();
+        }
+        VariantClear(&rowsResult);
+    }
+
     ptName = const_cast<LPOLESTR>(L"Value");
     hr = pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Value property" << std::endl;
+        std::wcerr << L"Failed to get Value property. HRESULT: " << hr << std::endl;
         pRange->Release();
         pWorksheet->Release();
         pWorksheets->Release();
@@ -216,8 +251,33 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     VARIANT varResult;
     VariantInit(&varResult);
     hr = pRange->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &varResult, NULL, NULL);
-    if (FAILED(hr) || varResult.vt != VT_ARRAY) {
-        std::wcerr << L"Failed to get cell data" << std::endl;
+    
+    std::wcout << L"   Value property HRESULT: " << hr << std::endl;
+    std::wcout << L"   Value property type: " << varResult.vt << std::endl;
+    
+    if (FAILED(hr)) {
+        std::wcerr << L"Failed to get cell data. HRESULT: " << hr << std::endl;
+        VariantClear(&varResult);
+        pRange->Release();
+        pWorksheet->Release();
+        pWorksheets->Release();
+        pWorkbook->Release();
+        pWorkbooks->Release();
+        pExcelApp->Release();
+        return false;
+    }
+
+    if (varResult.vt != VT_ARRAY) {
+        std::wcerr << L"Cell data is not an array. Type: " << varResult.vt << std::endl;
+        std::wcerr << L"This may happen if the worksheet is empty or has only one cell." << std::endl;
+        
+        if (varResult.vt == VT_EMPTY || varResult.vt == VT_NULL) {
+            std::wcerr << L"Worksheet appears to be empty." << std::endl;
+        }
+        else if (varResult.vt == VT_BSTR) {
+            std::wcerr << L"Single cell value: " << varResult.bstrVal << std::endl;
+        }
+        
         VariantClear(&varResult);
         pRange->Release();
         pWorksheet->Release();
@@ -233,6 +293,9 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     SafeArrayGetLBound(pSafeArray, 1, &lBound);
     SafeArrayGetUBound(pSafeArray, 1, &uBound);
 
+    long rowCount = uBound - lBound + 1;
+    std::wcout << L"   Array row count: " << rowCount << std::endl;
+
     for (long row = lBound + 1; row <= uBound; row++) {
         Participant participant;
         VARIANT cellValue;
@@ -244,6 +307,9 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
         else if (cellValue.vt == VT_I4) {
             participant.maleId = std::to_wstring(cellValue.lVal);
+        }
+        else if (cellValue.vt == VT_R8) {
+            participant.maleId = std::to_wstring((long long)cellValue.dblVal);
         }
         VariantClear(&cellValue);
 
@@ -262,6 +328,9 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         else if (cellValue.vt == VT_I4) {
             participant.femaleId = std::to_wstring(cellValue.lVal);
         }
+        else if (cellValue.vt == VT_R8) {
+            participant.femaleId = std::to_wstring((long long)cellValue.dblVal);
+        }
         VariantClear(&cellValue);
 
         indices[1] = 4;
@@ -277,6 +346,8 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
             participants.push_back(participant);
         }
     }
+
+    std::wcout << L"   Successfully read " << participants.size() << L" registration entries" << std::endl;
 
     VariantClear(&varResult);
     pRange->Release();
@@ -326,13 +397,13 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     CLSID clsid;
     HRESULT hr = CLSIDFromProgID(L"Excel.Application", &clsid);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to create Excel application instance" << std::endl;
+        std::wcerr << L"Failed to create Excel application instance. HRESULT: " << hr << std::endl;
         return false;
     }
 
     hr = CoCreateInstance(clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch, (void**)&pExcelApp);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to start Excel" << std::endl;
+        std::wcerr << L"Failed to start Excel. HRESULT: " << hr << std::endl;
         return false;
     }
 
@@ -354,7 +425,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     ptName = const_cast<LPOLESTR>(L"Workbooks");
     hr = pExcelApp->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks property" << std::endl;
+        std::wcerr << L"Failed to get Workbooks property. HRESULT: " << hr << std::endl;
         pExcelApp->Release();
         return false;
     }
@@ -364,7 +435,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
     hr = pExcelApp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks collection" << std::endl;
+        std::wcerr << L"Failed to get Workbooks collection. HRESULT: " << hr << std::endl;
         pExcelApp->Release();
         return false;
     }
@@ -373,7 +444,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     ptName = const_cast<LPOLESTR>(L"Open");
     hr = pWorkbooks->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Open method" << std::endl;
+        std::wcerr << L"Failed to get Open method. HRESULT: " << hr << std::endl;
         pWorkbooks->Release();
         pExcelApp->Release();
         return false;
@@ -398,7 +469,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     SysFreeString(filename.bstrVal);
 
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to open file: " << filePath << std::endl;
+        std::wcerr << L"Failed to open file: " << filePath << L". HRESULT: " << hr << std::endl;
         pWorkbooks->Release();
         pExcelApp->Release();
         return false;
@@ -408,7 +479,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     ptName = const_cast<LPOLESTR>(L"Worksheets");
     hr = pWorkbook->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets property" << std::endl;
+        std::wcerr << L"Failed to get Worksheets property. HRESULT: " << hr << std::endl;
         pWorkbook->Release();
         pWorkbooks->Release();
         pExcelApp->Release();
@@ -418,7 +489,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     VariantInit(&result);
     hr = pWorkbook->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets collection" << std::endl;
+        std::wcerr << L"Failed to get Worksheets collection. HRESULT: " << hr << std::endl;
         pWorkbook->Release();
         pWorkbooks->Release();
         pExcelApp->Release();
@@ -434,7 +505,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     ptName = const_cast<LPOLESTR>(L"Item");
     hr = pWorksheets->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Item method" << std::endl;
+        std::wcerr << L"Failed to get Item method. HRESULT: " << hr << std::endl;
         pWorksheets->Release();
         pWorkbook->Release();
         pWorkbooks->Release();
@@ -454,7 +525,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     VariantInit(&result);
     hr = pWorksheets->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpItem, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get worksheet" << std::endl;
+        std::wcerr << L"Failed to get worksheet. HRESULT: " << hr << std::endl;
         pWorksheets->Release();
         pWorkbook->Release();
         pWorkbooks->Release();
@@ -466,7 +537,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     ptName = const_cast<LPOLESTR>(L"UsedRange");
     hr = pWorksheet->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange property" << std::endl;
+        std::wcerr << L"Failed to get UsedRange property. HRESULT: " << hr << std::endl;
         pWorksheet->Release();
         pWorksheets->Release();
         pWorkbook->Release();
@@ -478,7 +549,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     VariantInit(&result);
     hr = pWorksheet->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange" << std::endl;
+        std::wcerr << L"Failed to get UsedRange. HRESULT: " << hr << std::endl;
         pWorksheet->Release();
         pWorksheets->Release();
         pWorkbook->Release();
@@ -488,10 +559,45 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     }
     pRange = result.pdispVal;
 
+    ptName = const_cast<LPOLESTR>(L"Rows");
+    hr = pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    if (SUCCEEDED(hr)) {
+        VARIANT rowsResult;
+        VariantInit(&rowsResult);
+        hr = pRange->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &rowsResult, NULL, NULL);
+        if (SUCCEEDED(hr) && rowsResult.vt == VT_DISPATCH) {
+            IDispatch* pRows = rowsResult.pdispVal;
+            LPOLESTR countName = const_cast<LPOLESTR>(L"Count");
+            DISPID countDispID;
+            hr = pRows->GetIDsOfNames(IID_NULL, &countName, 1, LOCALE_USER_DEFAULT, &countDispID);
+            if (SUCCEEDED(hr)) {
+                VARIANT countResult;
+                VariantInit(&countResult);
+                hr = pRows->Invoke(countDispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &countResult, NULL, NULL);
+                if (SUCCEEDED(hr)) {
+                    long rowCount = 0;
+                    if (countResult.vt == VT_I4) {
+                        rowCount = countResult.lVal;
+                    }
+                    else if (countResult.vt == VT_I2) {
+                        rowCount = countResult.iVal;
+                    }
+                    std::wcout << L"   Worksheet has " << rowCount << L" rows" << std::endl;
+                    if (rowCount <= 1) {
+                        std::wcerr << L"Warning: Worksheet appears to be empty or has only header row" << std::endl;
+                    }
+                }
+                VariantClear(&countResult);
+            }
+            pRows->Release();
+        }
+        VariantClear(&rowsResult);
+    }
+
     ptName = const_cast<LPOLESTR>(L"Value");
     hr = pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Value property" << std::endl;
+        std::wcerr << L"Failed to get Value property. HRESULT: " << hr << std::endl;
         pRange->Release();
         pWorksheet->Release();
         pWorksheets->Release();
@@ -504,8 +610,33 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     VARIANT varResult;
     VariantInit(&varResult);
     hr = pRange->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &varResult, NULL, NULL);
-    if (FAILED(hr) || varResult.vt != VT_ARRAY) {
-        std::wcerr << L"Failed to get cell data" << std::endl;
+    
+    std::wcout << L"   Value property HRESULT: " << hr << std::endl;
+    std::wcout << L"   Value property type: " << varResult.vt << std::endl;
+    
+    if (FAILED(hr)) {
+        std::wcerr << L"Failed to get cell data. HRESULT: " << hr << std::endl;
+        VariantClear(&varResult);
+        pRange->Release();
+        pWorksheet->Release();
+        pWorksheets->Release();
+        pWorkbook->Release();
+        pWorkbooks->Release();
+        pExcelApp->Release();
+        return false;
+    }
+
+    if (varResult.vt != VT_ARRAY) {
+        std::wcerr << L"Cell data is not an array. Type: " << varResult.vt << std::endl;
+        std::wcerr << L"This may happen if the worksheet is empty or has only one cell." << std::endl;
+        
+        if (varResult.vt == VT_EMPTY || varResult.vt == VT_NULL) {
+            std::wcerr << L"Worksheet appears to be empty." << std::endl;
+        }
+        else if (varResult.vt == VT_BSTR) {
+            std::wcerr << L"Single cell value: " << varResult.bstrVal << std::endl;
+        }
+        
         VariantClear(&varResult);
         pRange->Release();
         pWorksheet->Release();
@@ -521,6 +652,9 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
     SafeArrayGetLBound(pSafeArray, 1, &lBound);
     SafeArrayGetUBound(pSafeArray, 1, &uBound);
 
+    long rowCount = uBound - lBound + 1;
+    std::wcout << L"   Array row count: " << rowCount << std::endl;
+
     for (long row = lBound + 1; row <= uBound; row++) {
         ScoreEntry entry;
         VARIANT cellValue;
@@ -529,6 +663,9 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_I4) {
             entry.rank = cellValue.lVal;
+        }
+        else if (cellValue.vt == VT_R8) {
+            entry.rank = (long)cellValue.dblVal;
         }
         else if (cellValue.vt == VT_BSTR) {
             try {
@@ -548,6 +685,9 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         else if (cellValue.vt == VT_I4) {
             entry.group = std::to_wstring(cellValue.lVal) + L"zu";
         }
+        else if (cellValue.vt == VT_R8) {
+            entry.group = std::to_wstring((long)cellValue.dblVal) + L"zu";
+        }
         VariantClear(&cellValue);
 
         indices[1] = 3;
@@ -562,6 +702,15 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
             swprintf_s(buffer, L"%d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
             entry.time = buffer;
         }
+        else if (cellValue.vt == VT_R8) {
+            double timeVal = cellValue.dblVal;
+            int hours = (int)(timeVal * 24);
+            int minutes = (int)((timeVal * 24 - hours) * 60);
+            int seconds = (int)(((timeVal * 24 - hours) * 60 - minutes) * 60);
+            wchar_t buffer[32];
+            swprintf_s(buffer, L"%d:%02d:%02d", hours, minutes, seconds);
+            entry.time = buffer;
+        }
         VariantClear(&cellValue);
 
         entry.groupNumber = ExtractGroupNumber(entry.group);
@@ -570,6 +719,8 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
             scoreEntries.push_back(entry);
         }
     }
+
+    std::wcout << L"   Successfully read " << scoreEntries.size() << L" score entries" << std::endl;
 
     VariantClear(&varResult);
     pRange->Release();
