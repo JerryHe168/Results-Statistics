@@ -13,7 +13,4 @@ public:
                      std::vector<ResultEntry>& results);
 
     bool ExportResults(const std::wstring& filePath, const std::vector<ResultEntry>& results);
-
-private:
-    std::wstring FindNamesByGroup(int groupNumber, const std::vector<Participant>& participants);
 };
