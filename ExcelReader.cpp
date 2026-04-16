@@ -37,7 +37,7 @@ ExcelReader::~ExcelReader() {
  * 使用正则表达式匹配字符串中的第一个连续数字序列。
  * 
  * @param id 编号字符串
- * @return int 提取的组号，无法提取则返回-1
+ * @return 提取的组号，无法提取则返回-1
  */
 int ExcelReader::ExtractGroupNumber(const std::wstring& id) {
     std::wregex regex(L"(\\d+)");

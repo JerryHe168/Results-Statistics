@@ -34,7 +34,7 @@ CsvReader::~CsvReader() {
  * 使用Windows API MultiByteToWideChar进行编码转换。
  * 
  * @param str UTF-8编码的字符串
- * @return std::wstring 宽字符字符串（UTF-16）
+ * @return 宽字符字符串（UTF-16）
  */
 std::wstring CsvReader::StringToWString(const std::string& str) {
     if (str.empty()) {
@@ -56,7 +56,7 @@ std::wstring CsvReader::StringToWString(const std::string& str) {
  * @brief 去除字符串首尾的空白和引号
  * 
  * @param str 原始字符串
- * @return std::wstring 处理后的字符串
+ * @return 处理后的字符串
  */
 std::wstring CsvReader::Trim(const std::wstring& str) {
     size_t start = str.find_first_not_of(L" \t\"");
@@ -74,7 +74,7 @@ std::wstring CsvReader::Trim(const std::wstring& str) {
  * 遵循RFC 4180标准解析CSV行。
  * 
  * @param line CSV格式的一行字符串
- * @return std::vector<std::wstring> 解析后的字段列表
+ * @return 解析后的字段列表
  */
 std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
     std::vector<std::wstring> result;
@@ -112,7 +112,7 @@ std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
  * 使用正则表达式匹配字符串中的第一个连续数字序列。
  * 
  * @param id 编号字符串
- * @return int 提取的组号，无法提取则返回-1
+ * @return 提取的组号，无法提取则返回-1
  */
 int CsvReader::ExtractGroupNumber(const std::wstring& id) {
     std::wregex regex(L"(\\d+)");

@@ -30,9 +30,9 @@
  * 用于标识检测到的文件格式类型。
  */
 enum class FileFormat {
-    Excel,      ///< Excel格式（.xls 或 .xlsx）
-    Csv,        ///< CSV格式（.csv）
-    Unknown     ///< 未知或不支持的格式
+    Excel,      // Excel格式（.xls 或 .xlsx）
+    Csv,        // CSV格式（.csv）
+    Unknown     // 未知或不支持的格式
 };
 
 /**
@@ -41,7 +41,7 @@ enum class FileFormat {
  * 根据文件扩展名检测文件格式。
  * 
  * @param filePath 文件路径
- * @return FileFormat 文件格式枚举值
+ * @return 文件格式枚举值
  */
 FileFormat DetectFileFormat(const std::wstring& filePath) {
     std::wstring lowerPath = filePath;
@@ -71,7 +71,7 @@ FileFormat DetectFileFormat(const std::wstring& filePath) {
  * @brief 获取文件扩展名
  * 
  * @param filePath 文件路径
- * @return std::wstring 文件扩展名（包含点号）
+ * @return 文件扩展名（包含点号）
  */
 std::wstring GetFileExtension(const std::wstring& filePath) {
     size_t dotPos = filePath.find_last_of(L'.');
@@ -98,7 +98,7 @@ std::wstring GetFileExtension(const std::wstring& filePath) {
  * 
  * @param argc 命令行参数个数
  * @param argv 命令行参数数组
- * @return int 程序退出码（0=成功，1=失败）
+ * @return 程序退出码（0-成功，1-失败）
  */
 int wmain(int argc, wchar_t* argv[]) {
     std::wcout << L"========================================" << std::endl;
