@@ -13,4 +13,9 @@ public:
                      std::vector<ResultEntry>& results);
 
     bool ExportResults(const std::wstring& filePath, const std::vector<ResultEntry>& results);
+    bool ExportResultsToCsv(const std::wstring& filePath, const std::vector<ResultEntry>& results);
+
+private:
+    std::string WStringToString(const std::wstring& str);
+    std::string EscapeCsvField(const std::wstring& field);
 };

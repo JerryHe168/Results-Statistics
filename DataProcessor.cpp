@@ -481,3 +481,76 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
 
     return true;
 }
+
+std::string DataProcessor::WStringToString(const std::wstring& wstr) {
+    if (wstr.empty()) {
+        return "";
+    }
+
+    int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
+    if (size <= 0) {
+        return "";
+    }
+
+    std::string result(size - 1, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], size, NULL, NULL);
+    return result;
+}
+
+std::string DataProcessor::EscapeCsvField(const std::wstring& field) {
+    std::string str = WStringToString(field);
+    
+    bool needsQuotes = false;
+    if (str.find(',') != std::string::npos ||
+        str.find('"') != std::string::npos ||
+        str.find('\n') != std::string::npos ||
+        str.find('\r') != std::string::npos) {
+        needsQuotes = true;
+    }
+
+    if (!needsQuotes) {
+        return str;
+    }
+
+    std::string escaped;
+    escaped += '"';
+    for (char c : str) {
+        if (c == '"') {
+            escaped += "\"\"";
+        }
+        else {
+            escaped += c;
+        }
+    }
+    escaped += '"';
+    return escaped;
+}
+
+bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
+    if (results.empty()) {
+        std::wcerr << L"Warning: No results to export" << std::endl;
+    }
+
+    std::string narrowPath = WStringToString(filePath);
+
+    std::ofstream file(narrowPath, std::ios::binary);
+    if (!file.is_open()) {
+        std::wcerr << L"Failed to create CSV file: " << filePath << std::endl;
+        return false;
+    }
+
+    unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
+    file.write(reinterpret_cast<char*>(bom), sizeof(bom));
+
+    file << "Rank,Group,Names,Score\r\n";
+
+    for (const auto& result : results) {
+        file << result.rank << ",";
+        file << EscapeCsvField(result.group) << ",";
+        file << EscapeCsvField(result.names) << ",";
+        file << EscapeCsvField(result.time) << "\r\n";
+    }
+
+    file.close();
+    return true;
+}
