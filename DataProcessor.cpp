@@ -522,7 +522,7 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
  * 使用Windows API WideCharToMultiByte进行编码转换。
  * 
  * @param wstr 宽字符字符串（UTF-16）
- * @return std::string UTF-8编码的字符串
+ * @return UTF-8编码的字符串
  */
 std::string DataProcessor::WStringToString(const std::wstring& wstr) {
     if (wstr.empty()) {
@@ -546,7 +546,7 @@ std::string DataProcessor::WStringToString(const std::wstring& wstr) {
  * 遵循RFC 4180标准处理CSV字段。
  * 
  * @param field 原始字段值
- * @return std::string 转义后的CSV字段字符串
+ * @return 转义后的CSV字段字符串
  */
 std::string DataProcessor::EscapeCsvField(const std::wstring& field) {
     std::string str = WStringToString(field);
