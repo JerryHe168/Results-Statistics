@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <comutil.h>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
