@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+﻿#pragma execution_character_set("utf-8")
 
 /**
  * @class DataProcessor
@@ -187,7 +187,7 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
     }
 
     VariantInit(&result);
-    hr = pWorkbooks->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dpNoArgs, &result, NULL, NULL, NULL);
+    hr = pWorkbooks->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dpNoArgs, &result, NULL, NULL);
     if (FAILED(hr)) {
         std::wcerr << L"Failed to create new workbook" << std::endl;
         pWorkbooks->Release();
