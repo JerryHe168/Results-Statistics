@@ -81,21 +81,20 @@ int CsvReader::ExtractGroupNumber(const std::wstring& id) {
 bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<Participant>& participants) {
     participants.clear();
 
-    std::string narrowPath;
-    int size = WideCharToMultiByte(CP_UTF8, 0, filePath.c_str(), -1, NULL, 0, NULL, NULL);
-    if (size > 0) {
-        narrowPath.resize(size - 1);
-        WideCharToMultiByte(CP_UTF8, 0, filePath.c_str(), -1, &narrowPath[0], size, NULL, NULL);
-    }
-
-    std::ifstream file(narrowPath, std::ios::binary);
-    if (!file.is_open()) {
+    FILE* file = NULL;
+    errno_t err = _wfopen_s(&file, filePath.c_str(), L"rb");
+    if (err != 0 || file == NULL) {
         std::wcerr << L"Failed to open CSV file: " << filePath << std::endl;
         return false;
     }
 
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    std::string content(fileSize, 0);
+    fread(&content[0], 1, fileSize, file);
+    fclose(file);
 
     if (content.length() >= 3 && 
         (unsigned char)content[0] == 0xEF && 
@@ -157,21 +156,20 @@ bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<P
 bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEntry>& scoreEntries) {
     scoreEntries.clear();
 
-    std::string narrowPath;
-    int size = WideCharToMultiByte(CP_UTF8, 0, filePath.c_str(), -1, NULL, 0, NULL, NULL);
-    if (size > 0) {
-        narrowPath.resize(size - 1);
-        WideCharToMultiByte(CP_UTF8, 0, filePath.c_str(), -1, &narrowPath[0], size, NULL, NULL);
-    }
-
-    std::ifstream file(narrowPath, std::ios::binary);
-    if (!file.is_open()) {
+    FILE* file = NULL;
+    errno_t err = _wfopen_s(&file, filePath.c_str(), L"rb");
+    if (err != 0 || file == NULL) {
         std::wcerr << L"Failed to open CSV file: " << filePath << std::endl;
         return false;
     }
 
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    std::string content(fileSize, 0);
+    fread(&content[0], 1, fileSize, file);
+    fclose(file);
 
     if (content.length() >= 3 && 
         (unsigned char)content[0] == 0xEF && 

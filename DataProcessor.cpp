@@ -532,26 +532,25 @@ bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::
         std::wcerr << L"Warning: No results to export" << std::endl;
     }
 
-    std::string narrowPath = WStringToString(filePath);
-
-    std::ofstream file(narrowPath, std::ios::binary);
-    if (!file.is_open()) {
+    FILE* file = NULL;
+    errno_t err = _wfopen_s(&file, filePath.c_str(), L"wb");
+    if (err != 0 || file == NULL) {
         std::wcerr << L"Failed to create CSV file: " << filePath << std::endl;
         return false;
     }
 
     unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
-    file.write(reinterpret_cast<char*>(bom), sizeof(bom));
+    fwrite(bom, 1, sizeof(bom), file);
 
-    file << "Rank,Group,Names,Score\r\n";
+    fprintf(file, "Rank,Group,Names,Score\r\n");
 
     for (const auto& result : results) {
-        file << result.rank << ",";
-        file << EscapeCsvField(result.group) << ",";
-        file << EscapeCsvField(result.names) << ",";
-        file << EscapeCsvField(result.time) << "\r\n";
+        fprintf(file, "%d,", result.rank);
+        fprintf(file, "%s,", EscapeCsvField(result.group).c_str());
+        fprintf(file, "%s,", EscapeCsvField(result.names).c_str());
+        fprintf(file, "%s\r\n", EscapeCsvField(result.time).c_str());
     }
 
-    file.close();
+    fclose(file);
     return true;
 }
