@@ -5,16 +5,6 @@
  * @brief Excel文件读取器类
  * 
  * 负责使用COM自动化技术读取Excel格式的报名信息和成绩清单文件。
- * 支持 .xls 和 .xlsx 格式，自动跳过表头。
- * 
- * 关键技术点：
- * - 使用位运算检查VT_ARRAY类型（Excel返回 VT_ARRAY | VT_VARIANT）
- * - COM对象逆序释放（避免资源泄漏）
- * - Excel时间格式处理（VT_DATE、VT_R8浮点数）
- * 
- * 主要功能：
- * - ReadRegistrationInfo: 读取报名信息Excel文件
- * - ReadScoreList: 读取成绩清单Excel文件
  */
 
 #include "ExcelReader.h"
@@ -29,8 +19,6 @@
 
 /**
  * @brief 构造函数
- * 
- * 初始化COM库（CoInitialize）。
  */
 ExcelReader::ExcelReader() {
     CoInitialize(NULL);
@@ -38,8 +26,6 @@ ExcelReader::ExcelReader() {
 
 /**
  * @brief 析构函数
- * 
- * 清理COM库（CoUninitialize）。
  */
 ExcelReader::~ExcelReader() {
     CoUninitialize();
@@ -49,7 +35,6 @@ ExcelReader::~ExcelReader() {
  * @brief 从编号中提取组号
  * 
  * 使用正则表达式匹配字符串中的第一个连续数字序列。
- * 支持格式如："12A", "18B", "13组", "第5组"。
  * 
  * @param id 编号字符串
  * @return int 提取的组号，无法提取则返回-1
@@ -69,23 +54,10 @@ int ExcelReader::ExtractGroupNumber(const std::wstring& id) {
  * @brief 读取报名信息Excel文件
  * 
  * 使用COM自动化技术读取Excel文件，解析男生编号、男生姓名、女生编号、女生姓名。
- * 自动跳过第一行表头，从第二行开始读取数据。
- * 
- * Excel格式要求：
- * - 第1列：男生编号（如 "12A", "18A"）
- * - 第2列：男生姓名
- * - 第3列：女生编号（如 "17B", "13B"）
- * - 第4列：女生姓名
- * 
- * 关键处理：
- * - 使用位运算检查VT_ARRAY类型（解决Excel返回 8204 类型问题）
- * - COM对象逆序释放（栈结构，后进先出）
- * - SAFEARRAY索引从1开始（Excel的特殊约定）
  * 
  * @param filePath Excel文件路径
  * @param participants 输出参数，存储读取到的报名信息列表
- * @return true 读取成功
- * @return false 读取失败
+ * @return true-读取成功，false-读取失败
  */
 bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<Participant>& participants) {
     IDispatch* pExcelApp = NULL;
@@ -290,9 +262,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
     }
 
     // 关键修复：使用位运算检查VT_ARRAY类型
-    // 错误：varResult.vt != VT_ARRAY
-    // 正确：(varResult.vt & VT_ARRAY) != VT_ARRAY
-    // 原因：Excel返回 VT_ARRAY | VT_VARIANT (8204 = 0x200C)
+    // Excel返回 VT_ARRAY | VT_VARIANT (8204 = 0x200C)
     if ((varResult.vt & VT_ARRAY) != VT_ARRAY) {
         std::wcerr << L"Cell data is not an array. Type: " << varResult.vt << std::endl;
         VariantClear(&varResult);
@@ -362,7 +332,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
     }
 
-    // 释放资源 - 逆序释放COM对象
+    // 逆序释放COM对象
     // 创建顺序：pExcelApp -> pWorkbooks -> pWorkbook -> pWorksheets -> pWorksheet -> pRange
     // 释放顺序：pRange -> pWorksheet -> pWorksheets -> pWorkbook -> pWorkbooks -> pExcelApp
     VariantClear(&varResult);
@@ -408,22 +378,10 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
  * @brief 读取成绩清单Excel文件
  * 
  * 使用COM自动化技术读取Excel文件，解析名次、组别、成绩时间。
- * 自动跳过第一行表头，从第二行开始读取数据。
- * 
- * Excel格式要求：
- * - 第1列：名次（如 1, 2, 3）
- * - 第2列：组别（如 "13组", "22组"）
- * - 第3列：成绩时间（如 "0:37:06"）
- * 
- * 关键处理：
- * - 时间格式处理：支持 VT_BSTR（字符串）、VT_DATE（日期类型）、VT_R8（浮点数）
- * - Excel时间值：0=0:00:00, 1=24:00:00，使用公式 小时=timeVal*24
- * - VT_ARRAY位运算检查（与ReadRegistrationInfo相同）
  * 
  * @param filePath Excel文件路径
  * @param scoreEntries 输出参数，存储读取到的成绩条目列表
- * @return true 读取成功
- * @return false 读取失败
+ * @return true-读取成功，false-读取失败
  */
 bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEntry>& scoreEntries) {
     IDispatch* pExcelApp = NULL;

@@ -5,10 +5,6 @@
  * @brief 数据处理器类
  * 
  * 负责数据匹配和结果导出功能。
- * 主要功能：
- * - ProcessData: 根据组别匹配男生和女生姓名
- * - ExportResults: 导出结果到Excel文件
- * - ExportResultsToCsv: 导出结果到CSV文件
  */
 
 #include "DataProcessor.h"
@@ -38,13 +34,11 @@ DataProcessor::~DataProcessor() {
  * @brief 数据匹配处理
  * 
  * 根据组别匹配男生和女生姓名，生成结果条目。
- * 使用两个独立的映射表：男生组号->姓名，女生组号->姓名。
  * 
- * @param participants 报名信息列表（输入）
- * @param scoreEntries 成绩条目列表（输入）
- * @param results 结果列表（输出）
- * @return true 处理成功
- * @return false 处理失败
+ * @param participants 报名信息列表
+ * @param scoreEntries 成绩条目列表
+ * @param results 结果列表
+ * @return true-处理成功，false-处理失败
  */
 bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
                                  const std::vector<ScoreEntry>& scoreEntries,
@@ -123,8 +117,7 @@ bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
  * 
  * @param filePath 输出文件路径
  * @param results 结果列表
- * @return true 导出成功
- * @return false 导出失败
+ * @return true-导出成功，false-导出失败
  */
 bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
     if (results.empty()) {
@@ -528,7 +521,7 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
  * 
  * 使用Windows API WideCharToMultiByte进行编码转换。
  * 
- * @param wstr 宽字符字符串（UTF-16，Windows原生格式）
+ * @param wstr 宽字符字符串（UTF-16）
  * @return std::string UTF-8编码的字符串
  */
 std::string DataProcessor::WStringToString(const std::wstring& wstr) {
@@ -550,12 +543,10 @@ std::string DataProcessor::WStringToString(const std::wstring& wstr) {
 /**
  * @brief CSV字段转义
  * 
- * 遵循RFC 4180标准处理CSV字段：
- * - 包含逗号、双引号、换行符的字段需要用双引号包裹
- * - 字段中的双引号转义为两个双引号
+ * 遵循RFC 4180标准处理CSV字段。
  * 
- * @param field 原始字段值（宽字符字符串）
- * @return std::string 转义后的CSV字段字符串（UTF-8编码）
+ * @param field 原始字段值
+ * @return std::string 转义后的CSV字段字符串
  */
 std::string DataProcessor::EscapeCsvField(const std::wstring& field) {
     std::string str = WStringToString(field);
@@ -592,12 +583,10 @@ std::string DataProcessor::EscapeCsvField(const std::wstring& field) {
  * @brief 导出结果到CSV文件
  * 
  * 导出结果到UTF-8编码的CSV文件。
- * 使用_wfopen_s支持中文路径，写入UTF-8 BOM帮助Excel识别编码。
  * 
  * @param filePath 输出文件路径
  * @param results 结果列表
- * @return true 导出成功
- * @return false 导出失败
+ * @return true-导出成功，false-导出失败
  */
 bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
     if (results.empty()) {

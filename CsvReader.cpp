@@ -5,11 +5,6 @@
  * @brief CSV文件读取器类
  * 
  * 负责读取CSV格式的报名信息和成绩清单文件。
- * 支持UTF-8编码（带或不带BOM），自动跳过表头，支持中文路径。
- * 
- * 主要功能：
- * - ReadRegistrationInfo: 读取报名信息CSV文件
- * - ReadScoreList: 读取成绩清单CSV文件
  */
 
 #include "CsvReader.h"
@@ -39,7 +34,7 @@ CsvReader::~CsvReader() {
  * 使用Windows API MultiByteToWideChar进行编码转换。
  * 
  * @param str UTF-8编码的字符串
- * @return std::wstring 宽字符字符串（UTF-16，Windows原生格式）
+ * @return std::wstring 宽字符字符串（UTF-16）
  */
 std::wstring CsvReader::StringToWString(const std::string& str) {
     if (str.empty()) {
@@ -76,10 +71,7 @@ std::wstring CsvReader::Trim(const std::wstring& str) {
 /**
  * @brief 解析CSV格式的一行数据
  * 
- * 遵循RFC 4180标准解析CSV行：
- * - 逗号分隔字段
- * - 双引号包裹包含特殊字符的字段
- * - 字段中的双引号转义为两个双引号
+ * 遵循RFC 4180标准解析CSV行。
  * 
  * @param line CSV格式的一行字符串
  * @return std::vector<std::wstring> 解析后的字段列表
@@ -118,7 +110,6 @@ std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
  * @brief 从编号中提取组号
  * 
  * 使用正则表达式匹配字符串中的第一个连续数字序列。
- * 支持格式如："12A", "18B", "13组", "第5组"。
  * 
  * @param id 编号字符串
  * @return int 提取的组号，无法提取则返回-1
@@ -138,21 +129,10 @@ int CsvReader::ExtractGroupNumber(const std::wstring& id) {
  * @brief 读取报名信息CSV文件
  * 
  * 读取报名信息CSV文件，解析男生编号、男生姓名、女生编号、女生姓名。
- * 自动跳过表头行，支持UTF-8编码（带或不带BOM）。
- * 
- * CSV格式要求：
- * - 第1列：男生编号（如 "12A", "18A"）
- * - 第2列：男生姓名
- * - 第3列：女生编号（如 "17B", "13B"）
- * - 第4列：女生姓名
- * 
- * 表头检测（第一行包含以下关键字则跳过）：
- * - "男生"、"male"、"编号"
  * 
  * @param filePath CSV文件路径
  * @param participants 输出参数，存储读取到的报名信息列表
- * @return true 读取成功
- * @return false 读取失败
+ * @return true-读取成功，false-读取失败
  */
 bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<Participant>& participants) {
     participants.clear();
@@ -235,20 +215,10 @@ bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<P
  * @brief 读取成绩清单CSV文件
  * 
  * 读取成绩清单CSV文件，解析名次、组别、成绩时间。
- * 自动跳过表头行，支持UTF-8编码（带或不带BOM）。
- * 
- * CSV格式要求：
- * - 第1列：名次（如 1, 2, 3）
- * - 第2列：组别（如 "13组", "22组"）
- * - 第3列：成绩时间（如 "0:37:06"）
- * 
- * 表头检测（第一行包含以下关键字则跳过）：
- * - "名次"、"排名"、"rank"
  * 
  * @param filePath CSV文件路径
  * @param scoreEntries 输出参数，存储读取到的成绩条目列表
- * @return true 读取成功
- * @return false 读取失败
+ * @return true-读取成功，false-读取失败
  */
 bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEntry>& scoreEntries) {
     scoreEntries.clear();
