@@ -149,11 +149,13 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ExcelReader.cpp" />
+    <ClCompile Include="ExcelSession.cpp" />
     <ClCompile Include="CsvReader.cpp" />
     <ClCompile Include="DataProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExcelReader.h" />
+    <ClInclude Include="ExcelSession.h" />
     <ClInclude Include="CsvReader.h" />
     <ClInclude Include="DataProcessor.h" />
     <ClInclude Include="DataTypes.h" />
