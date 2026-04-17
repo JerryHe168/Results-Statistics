@@ -194,10 +194,7 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wcout << L"   Successfully read " << scoreEntries.size() << L" score entries" << std::endl;
 
     std::wcout << L"3. Processing data matching..." << std::endl;
-    if (!dataProcessor.ProcessData(participants, scoreEntries, results)) {
-        std::wcerr << L"Error: Data processing failed" << std::endl;
-        return 1;
-    }
+    dataProcessor.ProcessData(participants, scoreEntries, results);
     std::wcout << L"   Successfully processed " << results.size() << L" result entries" << std::endl;
 
     std::wcout << L"4. Exporting results..." << std::endl;

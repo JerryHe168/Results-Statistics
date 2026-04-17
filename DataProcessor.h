@@ -29,9 +29,8 @@ public:
      * @param participants 报名信息列表
      * @param scoreEntries 成绩条目列表
      * @param results 结果列表
-     * @return true-处理成功，false-处理失败
      */
-    bool ProcessData(const std::vector<Participant>& participants,
+    void ProcessData(const std::vector<Participant>& participants,
                      const std::vector<ScoreEntry>& scoreEntries,
                      std::vector<ResultEntry>& results);
 

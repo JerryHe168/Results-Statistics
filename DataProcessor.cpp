@@ -38,9 +38,8 @@ DataProcessor::~DataProcessor() {
  * @param participants 报名信息列表
  * @param scoreEntries 成绩条目列表
  * @param results 结果列表
- * @return true-处理成功，false-处理失败
  */
-bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
+void DataProcessor::ProcessData(const std::vector<Participant>& participants,
                                  const std::vector<ScoreEntry>& scoreEntries,
                                  std::vector<ResultEntry>& results) {
     results.clear();
@@ -51,7 +50,7 @@ bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
 
     if (scoreEntries.empty()) {
         std::wcerr << L"Error: No score entries available" << std::endl;
-        return false;
+        return;
     }
 
     // 双映射表设计：使用两个独立的映射表分别存储男生和女生信息
@@ -130,8 +129,6 @@ bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
 
         results.push_back(result);
     }
-
-    return true;
 }
 
 /**
