@@ -93,6 +93,16 @@ public:
      */
     std::wstring GetCellTime(long row, long col) const;
 
+    /**
+     * @brief 获取单元格值
+     * 
+     * @param row 行号（从 1 开始）
+     * @param col 列号（从 1 开始）
+     * @param cellValue 输出参数，存储单元格值
+     * @return true-获取成功，false-获取失败
+     */
+    bool GetCellValue(long row, long col, VARIANT& cellValue) const;
+
 private:
     IDispatch* m_pExcelApp;
     IDispatch* m_pWorkbooks;
@@ -109,16 +119,6 @@ private:
      * @brief 释放所有 COM 对象
      */
     void Release();
-
-    /**
-     * @brief 获取单元格值
-     * 
-     * @param row 行号（从 1 开始）
-     * @param col 列号（从 1 开始）
-     * @param cellValue 输出参数，存储单元格值
-     * @return true-获取成功，false-获取失败
-     */
-    bool GetCellValue(long row, long col, VARIANT& cellValue) const;
 };
 
 /**
