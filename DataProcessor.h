@@ -49,7 +49,7 @@ public:
     /**
      * @brief 导出结果到CSV文件
      * 
-     * 导出结果到UTF-8编码的CSV文件。
+     * 使用UTF-8编码。
      * 
      * @param filePath 输出文件路径
      * @param results 结果列表

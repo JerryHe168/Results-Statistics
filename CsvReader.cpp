@@ -144,7 +144,7 @@ int CsvReader::ExtractGroupNumber(const std::wstring& id) {
 /**
  * @brief 读取报名信息CSV文件
  * 
- * 读取报名信息CSV文件，解析男生编号、男生姓名、女生编号、女生姓名。
+ * 解析男生编号、男生姓名、女生编号、女生姓名。
  * 
  * @param filePath CSV文件路径
  * @param participants 输出参数，存储读取到的报名信息列表
@@ -237,7 +237,7 @@ bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<P
 /**
  * @brief 读取成绩清单CSV文件
  * 
- * 读取成绩清单CSV文件，解析名次、组别、成绩时间。
+ * 解析名次、组别、成绩时间。
  * 
  * @param filePath CSV文件路径
  * @param scoreEntries 输出参数，存储读取到的成绩条目列表
