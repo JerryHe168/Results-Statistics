@@ -52,7 +52,7 @@ private:
      * @param id 编号字符串
      * @return 提取的组号，无法提取则返回-1
      */
-    int ExtractGroupNumber(const std::wstring& id);
+    int ExtractGroupNumber(const std::wstring& id) const;
 
     /**
      * @brief 解析CSV格式的一行数据
@@ -62,7 +62,7 @@ private:
      * @param line CSV格式的一行字符串
      * @return 解析后的字段列表
      */
-    std::vector<std::wstring> SplitCsvLine(const std::wstring& line);
+    std::vector<std::wstring> SplitCsvLine(const std::wstring& line) const;
 
     /**
      * @brief 去除字符串首尾的空白和引号
@@ -70,7 +70,7 @@ private:
      * @param str 原始字符串
      * @return 处理后的字符串
      */
-    std::wstring Trim(const std::wstring& str);
+    std::wstring Trim(const std::wstring& str) const;
 
     /**
      * @brief UTF-8字符串转换为宽字符字符串
@@ -80,5 +80,5 @@ private:
      * @param str UTF-8编码的字符串
      * @return 宽字符字符串（UTF-16）
      */
-    std::wstring StringToWString(const std::string& str);
+    std::wstring StringToWString(const std::string& str) const;
 };
