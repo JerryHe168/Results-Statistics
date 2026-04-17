@@ -25,6 +25,7 @@ ExcelSession::ExcelSession()
     : m_pExcelApp(NULL), m_pWorkbooks(NULL), m_pWorkbook(NULL),
       m_pWorksheets(NULL), m_pWorksheet(NULL), m_pRange(NULL),
       m_pSafeArray(NULL), m_lBound(1), m_uBound(0) {
+    CoInitialize(NULL);
     VariantInit(&m_varResult);
 }
 
@@ -33,6 +34,7 @@ ExcelSession::ExcelSession()
  */
 ExcelSession::~ExcelSession() {
     Release();
+    CoUninitialize();
 }
 
 /**
