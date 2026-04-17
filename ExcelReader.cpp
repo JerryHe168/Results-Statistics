@@ -39,7 +39,7 @@ ExcelReader::~ExcelReader() {
  * @param id 编号字符串
  * @return 提取的组号，无法提取则返回-1
  */
-int ExcelReader::ExtractGroupNumber(const std::wstring& id) {
+int ExcelReader::ExtractGroupNumber(const std::wstring& id) const {
     // 正则表达式 L"(\\d+)"：匹配编号中的连续数字
     // 例如："23A" → 23，"17B" → 17
     std::wregex regex(L"(\\d+)");

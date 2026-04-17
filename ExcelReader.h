@@ -52,5 +52,5 @@ private:
      * @param id 编号字符串
      * @return 提取的组号，无法提取则返回-1
      */
-    int ExtractGroupNumber(const std::wstring& id);
+    int ExtractGroupNumber(const std::wstring& id) const;
 };

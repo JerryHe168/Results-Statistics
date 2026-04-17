@@ -557,7 +557,7 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
  * @param wstr 宽字符字符串（UTF-16）
  * @return UTF-8编码的字符串
  */
-std::string DataProcessor::WStringToString(const std::wstring& wstr) {
+std::string DataProcessor::WStringToString(const std::wstring& wstr) const {
     if (wstr.empty()) {
         return "";
     }
@@ -581,7 +581,7 @@ std::string DataProcessor::WStringToString(const std::wstring& wstr) {
  * @param field 原始字段值
  * @return 转义后的CSV字段字符串
  */
-std::string DataProcessor::EscapeCsvField(const std::wstring& field) {
+std::string DataProcessor::EscapeCsvField(const std::wstring& field) const {
     std::string str = WStringToString(field);
     
     bool needsQuotes = false;

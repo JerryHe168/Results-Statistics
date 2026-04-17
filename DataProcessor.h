@@ -66,7 +66,7 @@ private:
      * @param wstr 宽字符字符串（UTF-16）
      * @return UTF-8编码的字符串
      */
-    std::string WStringToString(const std::wstring& wstr);
+    std::string WStringToString(const std::wstring& wstr) const;
 
     /**
      * @brief CSV字段转义
@@ -76,5 +76,5 @@ private:
      * @param field 原始字段值
      * @return 转义后的CSV字段字符串
      */
-    std::string EscapeCsvField(const std::wstring& field);
+    std::string EscapeCsvField(const std::wstring& field) const;
 };

@@ -36,7 +36,7 @@ CsvReader::~CsvReader() {
  * @param str UTF-8编码的字符串
  * @return 宽字符字符串（UTF-16）
  */
-std::wstring CsvReader::StringToWString(const std::string& str) {
+std::wstring CsvReader::StringToWString(const std::string& str) const {
     if (str.empty()) {
         return L"";
     }
@@ -58,7 +58,7 @@ std::wstring CsvReader::StringToWString(const std::string& str) {
  * @param str 原始字符串
  * @return 处理后的字符串
  */
-std::wstring CsvReader::Trim(const std::wstring& str) {
+std::wstring CsvReader::Trim(const std::wstring& str) const {
     size_t start = str.find_first_not_of(L" \t\"");
     if (start == std::wstring::npos) {
         return L"";
@@ -76,7 +76,7 @@ std::wstring CsvReader::Trim(const std::wstring& str) {
  * @param line CSV格式的一行字符串
  * @return 解析后的字段列表
  */
-std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
+std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) const {
     std::vector<std::wstring> result;
     std::wstring current;
 
@@ -127,7 +127,7 @@ std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
  * @param id 编号字符串
  * @return 提取的组号，无法提取则返回-1
  */
-int CsvReader::ExtractGroupNumber(const std::wstring& id) {
+int CsvReader::ExtractGroupNumber(const std::wstring& id) const {
     // 正则表达式 L"(\\d+)"：匹配编号中的连续数字
     // 例如："23A" → 23，"17B" → 17
     std::wregex regex(L"(\\d+)");
