@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <windows.h>
+#include "ExcelComHelper.h"
 #include <string>
 #include <vector>
 
@@ -76,4 +76,13 @@ private:
      * @brief 释放所有 COM 对象
      */
     void Release();
+
+    /**
+     * @brief 写入单元格值（内部通用实现）
+     * @param row 行号
+     * @param col 列号
+     * @param value VARIANT 类型的值
+     * @return true-成功，false-失败
+     */
+    bool WriteCellInternal(long row, long col, const VARIANT& value);
 };
