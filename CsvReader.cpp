@@ -79,29 +79,42 @@ std::wstring CsvReader::Trim(const std::wstring& str) {
 std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
     std::vector<std::wstring> result;
     std::wstring current;
+
+    // 状态机变量：标记是否处于引号包裹的字段中
+    // 这是解析CSV的核心逻辑，用于处理包含逗号或双引号的字段
     bool inQuotes = false;
 
     for (size_t i = 0; i < line.length(); i++) {
         wchar_t c = line[i];
 
         if (c == L'"') {
+            // 双引号有两种含义：字段边界 或 转义的双引号
+            
+            // RFC 4180 标准：字段内部的双引号需要用两个双引号表示（转义）
+            // 例如：字段值 "Hello,World" 在CSV中表示为 ""Hello,World""
             if (inQuotes && i + 1 < line.length() && line[i + 1] == L'"') {
-                current += L'"';
-                i++;
+                current += L'"';  // 转义的双引号，添加一个双引号
+                i++;              // 跳过第二个双引号
             }
             else {
+                // 切换引号状态：字段开始或结束
+                // 进入或退出引号包裹的字段
                 inQuotes = !inQuotes;
             }
         }
         else if (c == L',' && !inQuotes) {
+            // 逗号分隔符：只有在引号外部才作为字段分隔符
+            // 如果在引号内部，逗号是字段内容的一部分
             result.push_back(Trim(current));
             current.clear();
         }
         else {
+            // 普通字符：添加到当前字段
             current += c;
         }
     }
 
+    // 处理最后一个字段
     result.push_back(Trim(current));
     return result;
 }
@@ -115,13 +128,21 @@ std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
  * @return 提取的组号，无法提取则返回-1
  */
 int CsvReader::ExtractGroupNumber(const std::wstring& id) {
+    // 正则表达式 L"(\\d+)" 解释：
+    // \\d  匹配任意数字字符 (0-9)
+    // +   匹配一个或多个前面的元素
+    // ()  捕获组，用于提取匹配的内容
+    // 例如："23A" 匹配 "23"，"17B" 匹配 "17"
     std::wregex regex(L"(\\d+)");
     std::wsmatch match;
 
     if (std::regex_search(id, match, regex)) {
+        // match[0] 是整个匹配的字符串
+        // match[1] 是第一个捕获组的内容（即我们需要的数字）
         return std::stoi(match[1].str());
     }
 
+    // 没有找到数字，返回-1表示无效
     return -1;
 }
 
@@ -163,32 +184,39 @@ bool CsvReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector<P
     std::wistringstream iss(wcontent);
     std::wstring line;
 
+    // 表头检测逻辑：标记是否为第一行，用于检测并跳过表头
     bool isFirstLine = true;
     while (std::getline(iss, line)) {
+        // 处理 Windows 换行符：Windows 用 \r\n，去除行末的 \r
         if (!line.empty() && line.back() == L'\r') {
             line.pop_back();
         }
 
+        // 跳过空行
         if (line.empty()) {
             continue;
         }
 
+        // 表头检测：第一行可能是表头
+        // 检测标准：第一列包含"男生"、"male"或"编号"等关键词
         if (isFirstLine) {
             std::vector<std::wstring> header = SplitCsvLine(line);
             if (header.size() >= 2) {
                 std::wstring lowerHeader = header[0];
                 std::transform(lowerHeader.begin(), lowerHeader.end(), lowerHeader.begin(), ::towlower);
 
+                // 检测表头关键词：中文"男生"、"编号" 或英文"male"
                 if (lowerHeader.find(L"男生") != std::wstring::npos ||
                     lowerHeader.find(L"male") != std::wstring::npos ||
                     lowerHeader.find(L"编号") != std::wstring::npos) {
                     isFirstLine = false;
-                    continue;
+                    continue;  // 跳过表头行
                 }
             }
-            isFirstLine = false;
+            isFirstLine = false;  // 无论是否检测到表头，第一行只检查一次
         }
 
+        // 报名信息需要至少4列：男生编号、男生姓名、女生编号、女生姓名
         std::vector<std::wstring> columns = SplitCsvLine(line);
         if (columns.size() < 4) {
             continue;
@@ -238,6 +266,7 @@ bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEnt
     fread(&content[0], 1, fileSize, file);
     fclose(file);
 
+    // UTF-8 BOM 检测和去除：0xEF 0xBB 0xBF 是 UTF-8 编码的字节顺序标记
     if (content.length() >= 3 &&
         (unsigned char)content[0] == 0xEF &&
         (unsigned char)content[1] == 0xBB &&
@@ -249,32 +278,39 @@ bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEnt
     std::wistringstream iss(wcontent);
     std::wstring line;
 
+    // 表头检测逻辑：标记是否为第一行，用于检测并跳过表头
     bool isFirstLine = true;
     while (std::getline(iss, line)) {
+        // 处理 Windows 换行符：Windows 用 \r\n，去除行末的 \r
         if (!line.empty() && line.back() == L'\r') {
             line.pop_back();
         }
 
+        // 跳过空行
         if (line.empty()) {
             continue;
         }
 
+        // 表头检测：第一行可能是表头
+        // 检测标准：第一列包含"名次"、"rank"或"排名"等关键词
         if (isFirstLine) {
             std::vector<std::wstring> header = SplitCsvLine(line);
             if (header.size() >= 2) {
                 std::wstring lowerHeader = header[0];
                 std::transform(lowerHeader.begin(), lowerHeader.end(), lowerHeader.begin(), ::towlower);
 
+                // 检测表头关键词：中文"名次"、"排名" 或英文"rank"
                 if (lowerHeader.find(L"名次") != std::wstring::npos ||
                     lowerHeader.find(L"rank") != std::wstring::npos ||
                     lowerHeader.find(L"排名") != std::wstring::npos) {
                     isFirstLine = false;
-                    continue;
+                    continue;  // 跳过表头行
                 }
             }
-            isFirstLine = false;
+            isFirstLine = false;  // 无论是否检测到表头，第一行只检查一次
         }
 
+        // 成绩清单需要至少3列：名次、组别、成绩时间
         std::vector<std::wstring> columns = SplitCsvLine(line);
         if (columns.size() < 3) {
             continue;
@@ -282,6 +318,7 @@ bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEnt
 
         ScoreEntry entry;
 
+        // 名次转换：使用 try-catch 处理可能的转换异常
         try {
             entry.rank = std::stoi(columns[0]);
         }
@@ -294,6 +331,7 @@ bool CsvReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreEnt
 
         entry.groupNumber = ExtractGroupNumber(entry.group);
 
+        // 名次过滤：只保留有效名次（名次 > 0）
         if (entry.rank > 0) {
             scoreEntries.push_back(entry);
         }

@@ -40,13 +40,21 @@ ExcelReader::~ExcelReader() {
  * @return 提取的组号，无法提取则返回-1
  */
 int ExcelReader::ExtractGroupNumber(const std::wstring& id) {
+    // 正则表达式 L"(\\d+)" 解释：
+    // \\d  匹配任意数字字符 (0-9)
+    // +   匹配一个或多个前面的元素
+    // ()  捕获组，用于提取匹配的内容
+    // 例如："23A" 匹配 "23"，"17B" 匹配 "17"
     std::wregex regex(L"(\\d+)");
     std::wsmatch match;
 
     if (std::regex_search(id, match, regex)) {
+        // match[0] 是整个匹配的字符串
+        // match[1] 是第一个捕获组的内容（即我们需要的数字）
         return std::stoi(match[1].str());
     }
 
+    // 没有找到数字，返回-1表示无效
     return -1;
 }
 
@@ -275,16 +283,34 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         return false;
     }
 
+    // 获取 SAFEARRAY 指针
+    // SAFEARRAY 是 COM 中用于跨进程传递数组的安全类型
+    // 注意：Excel 的 SAFEARRAY 索引从 1 开始（不是从 0 开始）
     SAFEARRAY* pSafeArray = varResult.parray;
     long lBound, uBound;
-    SafeArrayGetLBound(pSafeArray, 1, &lBound);
-    SafeArrayGetUBound(pSafeArray, 1, &uBound);
+    SafeArrayGetLBound(pSafeArray, 1, &lBound);  // 获取下界（通常是1）
+    SafeArrayGetUBound(pSafeArray, 1, &uBound);  // 获取上界
 
+    // 遍历数据行
+    // 从 lBound + 1 开始是为了跳过表头行
+    // 报名信息的列结构：
+    // 列 1：男生编号（如 "23A", "18A"）
+    // 列 2：男生姓名
+    // 列 3：女生编号（如 "16B", "13B"）
+    // 列 4：女生姓名
     for (long row = lBound + 1; row <= uBound; row++) {
         Participant participant;
         VARIANT cellValue;
+        
+        // indices 数组：{行号, 列号}
+        // 注意：SAFEARRAY 的索引顺序是 {行, 列}
         long indices[2] = { row, 1 };
 
+        // 读取第 1 列：男生编号
+        // VARIANT 类型处理：
+        // - VT_BSTR: 字符串类型（最常见）
+        // - VT_I4: 32位整数
+        // - VT_R8: 双精度浮点数
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
             participant.maleId = cellValue.bstrVal;
@@ -297,6 +323,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
         VariantClear(&cellValue);
 
+        // 读取第 2 列：男生姓名
         indices[1] = 2;
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
@@ -304,6 +331,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
         VariantClear(&cellValue);
 
+        // 读取第 3 列：女生编号
         indices[1] = 3;
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
@@ -317,6 +345,7 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
         VariantClear(&cellValue);
 
+        // 读取第 4 列：女生姓名
         indices[1] = 4;
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
@@ -324,9 +353,11 @@ bool ExcelReader::ReadRegistrationInfo(const std::wstring& filePath, std::vector
         }
         VariantClear(&cellValue);
 
+        // 从编号中提取组号
         participant.maleGroupNumber = ExtractGroupNumber(participant.maleId);
         participant.femaleGroupNumber = ExtractGroupNumber(participant.femaleId);
 
+        // 只添加有姓名的记录
         if (!participant.maleName.empty() || !participant.femaleName.empty()) {
             participants.push_back(participant);
         }
@@ -597,16 +628,24 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         return false;
     }
 
+    // 获取 SAFEARRAY 指针
+    // 成绩清单的列结构：
+    // 列 1：名次
+    // 列 2：组别（如 "23组"）
+    // 列 3：成绩时间
     SAFEARRAY* pSafeArray = varResult.parray;
     long lBound, uBound;
-    SafeArrayGetLBound(pSafeArray, 1, &lBound);
-    SafeArrayGetUBound(pSafeArray, 1, &uBound);
+    SafeArrayGetLBound(pSafeArray, 1, &lBound);  // 获取下界（通常是1）
+    SafeArrayGetUBound(pSafeArray, 1, &uBound);  // 获取上界
 
+    // 遍历数据行
+    // 从 lBound + 1 开始是为了跳过表头行
     for (long row = lBound + 1; row <= uBound; row++) {
         ScoreEntry entry;
         VARIANT cellValue;
         long indices[2] = { row, 1 };
 
+        // 读取第 1 列：名次
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_I4) {
             entry.rank = cellValue.lVal;
@@ -615,21 +654,24 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
             entry.rank = (long)cellValue.dblVal;
         }
         else if (cellValue.vt == VT_BSTR) {
+            // 字符串格式的名次，尝试转换为整数
             try {
                 entry.rank = std::stoi(cellValue.bstrVal);
             }
             catch (...) {
-                entry.rank = 0;
+                entry.rank = 0;  // 转换失败，标记为无效
             }
         }
         VariantClear(&cellValue);
 
+        // 读取第 2 列：组别
         indices[1] = 2;
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
             entry.group = cellValue.bstrVal;
         }
         else if (cellValue.vt == VT_I4) {
+            // 数字格式的组别，添加 "组" 后缀
             entry.group = std::to_wstring(cellValue.lVal) + L"组";
         }
         else if (cellValue.vt == VT_R8) {
@@ -638,10 +680,16 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         VariantClear(&cellValue);
 
         // 时间格式处理：
-        // - VT_BSTR: 直接使用字符串
-        // - VT_DATE: 使用 VariantTimeToSystemTime 转换
-        // - VT_R8: 浮点数，0=0:00:00, 1=24:00:00
-        //   公式：小时 = timeVal * 24, 分钟 = (小数部分) * 60, 秒 = (小数部分) * 60
+        // Excel 中的时间可能以三种形式存储：
+        // - VT_BSTR: 字符串格式（如 "0:37:06"）
+        // - VT_DATE: Variant 时间格式（使用 VariantTimeToSystemTime 转换）
+        // - VT_R8: 浮点数格式（0.0 = 0:00:00, 1.0 = 24:00:00）
+        //   例如：0.025 表示 0.6 小时 = 36 分钟
+        //
+        // 浮点数转时间公式：
+        // - 小时 = timeVal * 24  （一天24小时）
+        // - 分钟 = (小数部分) * 60  （一小时60分钟）
+        // - 秒 = (小数部分) * 60    （一分钟60秒）
         indices[1] = 3;
         SafeArrayGetElement(pSafeArray, indices, &cellValue);
         if (cellValue.vt == VT_BSTR) {
@@ -651,14 +699,16 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
             SYSTEMTIME st;
             VariantTimeToSystemTime(cellValue.date, &st);
             wchar_t buffer[32];
+            // 格式：小时:分钟:秒（分钟和秒补零）
             swprintf_s(buffer, L"%d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
             entry.time = buffer;
         }
         else if (cellValue.vt == VT_R8) {
             double timeVal = cellValue.dblVal;
-            int hours = (int)(timeVal * 24);
-            int minutes = (int)((timeVal * 24 - hours) * 60);
-            int seconds = (int)(((timeVal * 24 - hours) * 60 - minutes) * 60);
+            // 浮点数转时间：0.0 = 0:00:00, 1.0 = 24:00:00
+            int hours = (int)(timeVal * 24);  // 乘以24得到小时数
+            int minutes = (int)((timeVal * 24 - hours) * 60);  // 小数部分乘以60得到分钟
+            int seconds = (int)(((timeVal * 24 - hours) * 60 - minutes) * 60);  // 小数部分乘以60得到秒
             wchar_t buffer[32];
             swprintf_s(buffer, L"%d:%02d:%02d", hours, minutes, seconds);
             entry.time = buffer;
