@@ -50,7 +50,8 @@ bool DataProcessor::ProcessData(const std::vector<Participant>& participants,
     }
 
     if (scoreEntries.empty()) {
-        std::wcerr << L"Warning: No score entries available" << std::endl;
+        std::wcerr << L"Error: No score entries available" << std::endl;
+        return false;
     }
 
     // 双映射表设计：使用两个独立的映射表分别存储男生和女生信息
