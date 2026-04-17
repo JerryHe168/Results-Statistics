@@ -100,18 +100,74 @@ void ExcelSession::Release() {
 }
 
 /**
- * @brief 打开 Excel 文件
- * 
- * 创建 Excel Application 实例，打开指定的工作簿，
- * 并获取第一个工作表的 UsedRange 数据。
- * 
- * @param filePath Excel 文件路径
- * @return true-打开成功，false-打开失败
+ * @brief 获取 COM 对象的属性（带错误输出）
  */
-bool ExcelSession::OpenFile(const std::wstring& filePath) {
-    // 先释放之前的资源
-    Release();
+bool ExcelSession::GetProperty(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& result) {
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
+    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    if (FAILED(hr)) {
+        std::wcerr << L"Failed to get " << propertyName << L" property. HRESULT: " << hr << std::endl;
+        return false;
+    }
 
+    VariantInit(&result);
+    DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
+    hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
+    if (FAILED(hr)) {
+        std::wcerr << L"Failed to get " << propertyName << L". HRESULT: " << hr << std::endl;
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief 设置 COM 对象的属性（不带错误输出，用于 Visible 这类非关键属性）
+ */
+void ExcelSession::SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& value) {
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
+    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    if (SUCCEEDED(hr)) {
+        DISPPARAMS dp;
+        dp.cArgs = 1;
+        dp.rgvarg = &value;
+        dp.cNamedArgs = 0;
+        dp.rgdispidNamedArgs = NULL;
+        pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    }
+}
+
+/**
+ * @brief 调用 COM 对象的方法（带错误输出）
+ */
+bool ExcelSession::InvokeMethod(IDispatch* pDispatch, const wchar_t* methodName, VARIANT* args, int argCount, VARIANT& result) {
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(methodName);
+    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    if (FAILED(hr)) {
+        std::wcerr << L"Failed to get " << methodName << L" method. HRESULT: " << hr << std::endl;
+        return false;
+    }
+
+    DISPPARAMS dp;
+    dp.cArgs = argCount;
+    dp.rgvarg = args;
+    dp.cNamedArgs = 0;
+    dp.rgdispidNamedArgs = NULL;
+
+    VariantInit(&result);
+    hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp, &result, NULL, NULL);
+    if (FAILED(hr)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief 创建 Excel Application 实例
+ */
+bool ExcelSession::CreateExcelInstance() {
     CLSID clsid;
     HRESULT hr = CLSIDFromProgID(L"Excel.Application", &clsid);
     if (FAILED(hr)) {
@@ -124,44 +180,39 @@ bool ExcelSession::OpenFile(const std::wstring& filePath) {
         std::wcerr << L"Failed to start Excel. HRESULT: " << hr << std::endl;
         return false;
     }
+    return true;
+}
 
-    // 设置 Excel 不可见
+/**
+ * @brief 设置 Excel 不可见（失败不中断流程）
+ */
+void ExcelSession::SetExcelInvisible() {
     VARIANT visible;
     VariantInit(&visible);
     visible.vt = VT_BOOL;
     visible.boolVal = VARIANT_FALSE;
+    SetPropertyNoFail(m_pExcelApp, L"Visible", visible);
+}
 
-    DISPID dispID;
-    LPOLESTR ptName = const_cast<LPOLESTR>(L"Visible");
-    hr = m_pExcelApp->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (SUCCEEDED(hr)) {
-        DISPPARAMS dp = { NULL, NULL, 0, 0 };
-        dp.cArgs = 1;
-        dp.rgvarg = &visible;
-        m_pExcelApp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
-    }
-
-    // 获取 Workbooks 集合
-    ptName = const_cast<LPOLESTR>(L"Workbooks");
-    hr = m_pExcelApp->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks property. HRESULT: " << hr << std::endl;
-        return false;
-    }
-
+/**
+ * @brief 获取 Workbooks 集合
+ */
+bool ExcelSession::GetWorkbooksCollection() {
     VARIANT result;
-    VariantInit(&result);
-    DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
-    hr = m_pExcelApp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Workbooks collection. HRESULT: " << hr << std::endl;
+    if (!GetProperty(m_pExcelApp, L"Workbooks", result)) {
         return false;
     }
     m_pWorkbooks = result.pdispVal;
+    return true;
+}
 
-    // 打开文件
-    ptName = const_cast<LPOLESTR>(L"Open");
-    hr = m_pWorkbooks->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+/**
+ * @brief 打开工作簿文件
+ */
+bool ExcelSession::OpenWorkbookFile(const std::wstring& filePath) {
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(L"Open");
+    HRESULT hr = m_pWorkbooks->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
         std::wcerr << L"Failed to get Open method. HRESULT: " << hr << std::endl;
         return false;
@@ -181,6 +232,7 @@ bool ExcelSession::OpenFile(const std::wstring& filePath) {
     dpOpen.cNamedArgs = 0;
     dpOpen.rgdispidNamedArgs = NULL;
 
+    VARIANT result;
     VariantInit(&result);
     hr = m_pWorkbooks->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dpOpen, &result, NULL, NULL);
     SysFreeString(filename.bstrVal);
@@ -190,45 +242,48 @@ bool ExcelSession::OpenFile(const std::wstring& filePath) {
         return false;
     }
     m_pWorkbook = result.pdispVal;
+    return true;
+}
 
-    // 获取 Worksheets 集合
-    ptName = const_cast<LPOLESTR>(L"Worksheets");
-    hr = m_pWorkbook->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets property. HRESULT: " << hr << std::endl;
-        return false;
-    }
-
-    VariantInit(&result);
-    hr = m_pWorkbook->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get Worksheets collection. HRESULT: " << hr << std::endl;
+/**
+ * @brief 获取 Worksheets 集合
+ */
+bool ExcelSession::GetWorksheetsCollection() {
+    VARIANT result;
+    if (!GetProperty(m_pWorkbook, L"Worksheets", result)) {
         return false;
     }
     m_pWorksheets = result.pdispVal;
+    return true;
+}
 
-    // 获取第一个工作表（Item(1)）
+/**
+ * @brief 获取第一个工作表
+ */
+bool ExcelSession::GetFirstWorksheet() {
     VARIANT sheetIndex;
     VariantInit(&sheetIndex);
     sheetIndex.vt = VT_I4;
     sheetIndex.lVal = 1;
 
-    ptName = const_cast<LPOLESTR>(L"Item");
-    hr = m_pWorksheets->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+    VARIANT args[1];
+    args[0] = sheetIndex;
+
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(L"Item");
+    HRESULT hr = m_pWorksheets->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
         std::wcerr << L"Failed to get Item method. HRESULT: " << hr << std::endl;
         return false;
     }
 
-    VARIANT argsItem[1];
-    argsItem[0] = sheetIndex;
-
     DISPPARAMS dpItem;
     dpItem.cArgs = 1;
-    dpItem.rgvarg = argsItem;
+    dpItem.rgvarg = args;
     dpItem.cNamedArgs = 0;
     dpItem.rgdispidNamedArgs = NULL;
 
+    VARIANT result;
     VariantInit(&result);
     hr = m_pWorksheets->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpItem, &result, NULL, NULL);
     if (FAILED(hr)) {
@@ -236,32 +291,35 @@ bool ExcelSession::OpenFile(const std::wstring& filePath) {
         return false;
     }
     m_pWorksheet = result.pdispVal;
+    return true;
+}
 
-    // 获取 UsedRange
-    ptName = const_cast<LPOLESTR>(L"UsedRange");
-    hr = m_pWorksheet->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange property. HRESULT: " << hr << std::endl;
-        return false;
-    }
-
-    VariantInit(&result);
-    hr = m_pWorksheet->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get UsedRange. HRESULT: " << hr << std::endl;
+/**
+ * @brief 获取 UsedRange
+ */
+bool ExcelSession::GetUsedRange() {
+    VARIANT result;
+    if (!GetProperty(m_pWorksheet, L"UsedRange", result)) {
         return false;
     }
     m_pRange = result.pdispVal;
+    return true;
+}
 
-    // 获取 Value 属性（SAFEARRAY）
-    ptName = const_cast<LPOLESTR>(L"Value");
-    hr = m_pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
+/**
+ * @brief 获取单元格数据并处理 SAFEARRAY
+ */
+bool ExcelSession::GetCellDataAndSafeArray() {
+    DISPID dispID;
+    LPOLESTR ptName = const_cast<LPOLESTR>(L"Value");
+    HRESULT hr = m_pRange->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
         std::wcerr << L"Failed to get Value property. HRESULT: " << hr << std::endl;
         return false;
     }
 
     VariantInit(&m_varResult);
+    DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
     hr = m_pRange->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &m_varResult, NULL, NULL);
     if (FAILED(hr)) {
         std::wcerr << L"Failed to get cell data. HRESULT: " << hr << std::endl;
@@ -269,18 +327,59 @@ bool ExcelSession::OpenFile(const std::wstring& filePath) {
         return false;
     }
 
-    // 关键修复：使用位运算检查 VT_ARRAY 类型
-    // Excel 返回 VT_ARRAY | VT_VARIANT (8204 = 0x200C)
     if ((m_varResult.vt & VT_ARRAY) != VT_ARRAY) {
         std::wcerr << L"Cell data is not an array. Type: " << m_varResult.vt << std::endl;
         VariantClear(&m_varResult);
         return false;
     }
 
-    // 获取 SAFEARRAY 指针
     m_pSafeArray = m_varResult.parray;
     SafeArrayGetLBound(m_pSafeArray, 1, &m_lBound);
     SafeArrayGetUBound(m_pSafeArray, 1, &m_uBound);
+    return true;
+}
+
+/**
+ * @brief 打开 Excel 文件
+ * 
+ * 创建 Excel Application 实例，打开指定的工作簿，
+ * 并获取第一个工作表的 UsedRange 数据。
+ * 
+ * @param filePath Excel 文件路径
+ * @return true-打开成功，false-打开失败
+ */
+bool ExcelSession::OpenFile(const std::wstring& filePath) {
+    Release();
+
+    if (!CreateExcelInstance()) {
+        return false;
+    }
+
+    SetExcelInvisible();
+
+    if (!GetWorkbooksCollection()) {
+        return false;
+    }
+
+    if (!OpenWorkbookFile(filePath)) {
+        return false;
+    }
+
+    if (!GetWorksheetsCollection()) {
+        return false;
+    }
+
+    if (!GetFirstWorksheet()) {
+        return false;
+    }
+
+    if (!GetUsedRange()) {
+        return false;
+    }
+
+    if (!GetCellDataAndSafeArray()) {
+        return false;
+    }
 
     return true;
 }
