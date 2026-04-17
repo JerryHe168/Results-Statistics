@@ -40,21 +40,16 @@ ExcelReader::~ExcelReader() {
  * @return 提取的组号，无法提取则返回-1
  */
 int ExcelReader::ExtractGroupNumber(const std::wstring& id) {
-    // 正则表达式 L"(\\d+)" 解释：
-    // \\d  匹配任意数字字符 (0-9)
-    // +   匹配一个或多个前面的元素
-    // ()  捕获组，用于提取匹配的内容
-    // 例如："23A" 匹配 "23"，"17B" 匹配 "17"
+    // 正则表达式 L"(\\d+)"：匹配编号中的连续数字
+    // 例如："23A" → 23，"17B" → 17
     std::wregex regex(L"(\\d+)");
     std::wsmatch match;
 
     if (std::regex_search(id, match, regex)) {
-        // match[0] 是整个匹配的字符串
-        // match[1] 是第一个捕获组的内容（即我们需要的数字）
+        // match[1] 是第一个捕获组的内容
         return std::stoi(match[1].str());
     }
 
-    // 没有找到数字，返回-1表示无效
     return -1;
 }
 
