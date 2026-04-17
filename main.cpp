@@ -85,22 +85,26 @@ std::wstring GetFileExtension(const std::wstring& filePath) {
  * @brief 主程序入口
  * 
  * 执行流程：
- * 1. 显示欢迎信息和支持的格式
- * 2. 获取三个文件路径（命令行参数或交互式输入）
- * 3. 检测每个文件的格式
- * 4. 验证格式是否支持
- * 5. 读取报名信息
- * 6. 读取成绩清单
- * 7. 处理数据匹配
- * 8. 导出结果
- * 9. 显示处理结果和预览
- * 10. 等待用户按键退出
+ * 1. 初始化 COM 库（用于 Excel 自动化）
+ * 2. 显示欢迎信息和支持的格式
+ * 3. 获取三个文件路径（命令行参数或交互式输入）
+ * 4. 检测每个文件的格式
+ * 5. 验证格式是否支持
+ * 6. 读取报名信息
+ * 7. 读取成绩清单
+ * 8. 处理数据匹配
+ * 9. 导出结果
+ * 10. 显示处理结果和预览
+ * 11. 等待用户按键退出
+ * 12. 反初始化 COM 库
  * 
  * @param argc 命令行参数个数
  * @param argv 命令行参数数组
  * @return 程序退出码（0-成功，1-失败）
  */
 int wmain(int argc, wchar_t* argv[]) {
+    CoInitialize(NULL);
+
     std::wcout << L"========================================" << std::endl;
     std::wcout << L"       Results Statistics Program" << std::endl;
     std::wcout << L"========================================" << std::endl;
@@ -136,18 +140,21 @@ int wmain(int argc, wchar_t* argv[]) {
     if (regFormat == FileFormat::Unknown) {
         std::wcerr << L"Error: Unsupported registration file format" << std::endl;
         std::wcerr << L"       Supported formats: .xls, .xlsx, .csv" << std::endl;
+        CoUninitialize();
         return 1;
     }
 
     if (scoreFormat == FileFormat::Unknown) {
         std::wcerr << L"Error: Unsupported score file format" << std::endl;
         std::wcerr << L"       Supported formats: .xls, .xlsx, .csv" << std::endl;
+        CoUninitialize();
         return 1;
     }
 
     if (outputFormat == FileFormat::Unknown) {
         std::wcerr << L"Error: Unsupported output file format" << std::endl;
         std::wcerr << L"       Supported formats: .xls, .xlsx, .csv" << std::endl;
+        CoUninitialize();
         return 1;
     }
 
@@ -174,6 +181,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
     if (!regSuccess) {
         std::wcerr << L"Error: Failed to read registration info file" << std::endl;
+        CoUninitialize();
         return 1;
     }
     std::wcout << L"   Successfully read " << participants.size() << L" registration entries" << std::endl;
@@ -189,6 +197,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
     if (!scoreSuccess) {
         std::wcerr << L"Error: Failed to read score list file" << std::endl;
+        CoUninitialize();
         return 1;
     }
     std::wcout << L"   Successfully read " << scoreEntries.size() << L" score entries" << std::endl;
@@ -208,6 +217,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
     if (!exportSuccess) {
         std::wcerr << L"Error: Failed to export result file" << std::endl;
+        CoUninitialize();
         return 1;
     }
     std::wcout << L"   Successfully exported to: " << outputFile << std::endl;
@@ -244,5 +254,6 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wcout << L"Press any key to exit..." << std::endl;
     std::wcin.get();
 
+    CoUninitialize();
     return 0;
 }
