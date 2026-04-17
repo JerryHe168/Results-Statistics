@@ -71,7 +71,7 @@ std::wstring CsvReader::Trim(const std::wstring& str) {
 /**
  * @brief 解析CSV格式的一行数据
  * 
- * 遵循RFC 4180标准解析CSV行。
+ * 支持双引号包裹字段和双引号转义。
  * 
  * @param line CSV格式的一行字符串
  * @return 解析后的字段列表
@@ -90,7 +90,7 @@ std::vector<std::wstring> CsvReader::SplitCsvLine(const std::wstring& line) {
         if (c == L'"') {
             // 双引号有两种含义：字段边界 或 转义的双引号
             
-            // RFC 4180 标准：字段内部的双引号需要用两个双引号表示（转义）
+            // 字段内部的双引号需要用两个双引号表示（转义）
             // 例如：字段值 "Hello,World" 在CSV中表示为 ""Hello,World""
             if (inQuotes && i + 1 < line.length() && line[i + 1] == L'"') {
                 current += L'"';  // 转义的双引号，添加一个双引号

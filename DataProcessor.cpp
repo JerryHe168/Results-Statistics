@@ -576,7 +576,7 @@ std::string DataProcessor::WStringToString(const std::wstring& wstr) {
 /**
  * @brief CSV字段转义
  * 
- * 遵循RFC 4180标准处理CSV字段。
+ * 处理包含逗号、双引号的CSV字段。
  * 
  * @param field 原始字段值
  * @return 转义后的CSV字段字符串

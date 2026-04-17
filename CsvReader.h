@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "DataTypes.h"
 #include <vector>
 #include <string>
@@ -57,7 +57,7 @@ private:
     /**
      * @brief 解析CSV格式的一行数据
      * 
-     * 遵循RFC 4180标准解析CSV行。
+     * 支持双引号包裹字段和双引号转义。
      * 
      * @param line CSV格式的一行字符串
      * @return 解析后的字段列表
