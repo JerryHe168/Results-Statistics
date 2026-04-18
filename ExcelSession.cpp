@@ -351,8 +351,7 @@ bool ExcelSession::GetCellValue(long row, long col, VARIANT& cellValue) const {
  * @return 单元格字符串值
  */
 std::wstring ExcelSession::GetCellString(long row, long col, const std::wstring& defaultVal) const {
-    VARIANT cellValue;
-    VariantInit(&cellValue);
+    VARIANT cellValue = { 0 };
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -371,8 +370,7 @@ std::wstring ExcelSession::GetCellString(long row, long col, const std::wstring&
  * @return 单元格整数值
  */
 long ExcelSession::GetCellLong(long row, long col, long defaultVal) const {
-    VARIANT cellValue;
-    VariantInit(&cellValue);
+    VARIANT cellValue = { 0 };
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -391,8 +389,7 @@ long ExcelSession::GetCellLong(long row, long col, long defaultVal) const {
  * @return 单元格浮点数值
  */
 double ExcelSession::GetCellDouble(long row, long col, double defaultVal) const {
-    VARIANT cellValue;
-    VariantInit(&cellValue);
+    VARIANT cellValue = { 0 };
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -412,8 +409,7 @@ double ExcelSession::GetCellDouble(long row, long col, double defaultVal) const 
  * @return 格式化的时间字符串（HH:MM:SS）
  */
 std::wstring ExcelSession::GetCellTime(long row, long col) const {
-    VARIANT cellValue;
-    VariantInit(&cellValue);
+    VARIANT cellValue = { 0 };
     if (!GetCellValue(row, col, cellValue)) {
         return L"";
     }
