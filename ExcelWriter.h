@@ -17,6 +17,9 @@ public:
      */
     ExcelWriter();
 
+    ExcelWriter(const ExcelWriter&) = delete;
+    ExcelWriter& operator=(const ExcelWriter&) = delete;
+
     /**
      * @brief 析构函数
      */

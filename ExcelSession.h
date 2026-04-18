@@ -17,6 +17,9 @@ public:
      */
     ExcelSession();
 
+    ExcelSession(const ExcelSession&) = delete;
+    ExcelSession& operator=(const ExcelSession&) = delete;
+
     /**
      * @brief 析构函数
      */
