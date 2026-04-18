@@ -103,7 +103,7 @@ std::wstring GetFileExtension(const std::wstring& filePath) {
  * @return 程序退出码（0-成功，1-失败）
  */
 int wmain(int argc, wchar_t* argv[]) {
-    CoInitialize(NULL);
+    (void)CoInitialize(NULL);
 
     std::wcout << L"========================================" << std::endl;
     std::wcout << L"       Results Statistics Program" << std::endl;
