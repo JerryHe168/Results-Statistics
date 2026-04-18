@@ -76,11 +76,12 @@ bool ExcelComHelper::SetProperty(IDispatch* pDispatch, const wchar_t* propertyNa
     }
 
     VARIANT arg = value;
+    DISPID dispidNamed = DISPID_PROPERTYPUT;
     DISPPARAMS dp;
     dp.cArgs = 1;
     dp.rgvarg = &arg;
-    dp.cNamedArgs = 0;
-    dp.rgdispidNamedArgs = NULL;
+    dp.cNamedArgs = 1;
+    dp.rgdispidNamedArgs = &dispidNamed;
 
     hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
     if (FAILED(hr)) {
@@ -102,11 +103,12 @@ void ExcelComHelper::SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* prop
     LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
     HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (SUCCEEDED(hr)) {
+        DISPID dispidNamed = DISPID_PROPERTYPUT;
         DISPPARAMS dp;
         dp.cArgs = 1;
         dp.rgvarg = &value;
-        dp.cNamedArgs = 0;
-        dp.rgdispidNamedArgs = NULL;
+        dp.cNamedArgs = 1;
+        dp.rgdispidNamedArgs = &dispidNamed;
         pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
     }
 }
