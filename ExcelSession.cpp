@@ -100,71 +100,6 @@ void ExcelSession::Release() {
 }
 
 /**
- * @brief 获取 COM 对象的属性（带错误输出）
- */
-bool ExcelSession::GetProperty(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& result) {
-    DISPID dispID;
-    LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
-    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get " << propertyName << L" property. HRESULT: " << hr << std::endl;
-        return false;
-    }
-
-    VariantInit(&result);
-    DISPPARAMS dpNoArgs = { NULL, NULL, 0, 0 };
-    hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dpNoArgs, &result, NULL, NULL);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get " << propertyName << L". HRESULT: " << hr << std::endl;
-        return false;
-    }
-    return true;
-}
-
-/**
- * @brief 设置 COM 对象的属性（不带错误输出，用于 Visible 这类非关键属性）
- */
-void ExcelSession::SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& value) {
-    DISPID dispID;
-    LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
-    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (SUCCEEDED(hr)) {
-        DISPPARAMS dp;
-        dp.cArgs = 1;
-        dp.rgvarg = &value;
-        dp.cNamedArgs = 0;
-        dp.rgdispidNamedArgs = NULL;
-        pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
-    }
-}
-
-/**
- * @brief 调用 COM 对象的方法（带错误输出）
- */
-bool ExcelSession::InvokeMethod(IDispatch* pDispatch, const wchar_t* methodName, VARIANT* args, int argCount, VARIANT& result) {
-    DISPID dispID;
-    LPOLESTR ptName = const_cast<LPOLESTR>(methodName);
-    HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
-    if (FAILED(hr)) {
-        std::wcerr << L"Failed to get " << methodName << L" method. HRESULT: " << hr << std::endl;
-        return false;
-    }
-
-    DISPPARAMS dp;
-    dp.cArgs = argCount;
-    dp.rgvarg = args;
-    dp.cNamedArgs = 0;
-    dp.rgdispidNamedArgs = NULL;
-
-    VariantInit(&result);
-    hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp, &result, NULL, NULL);
-    if (FAILED(hr)) {
-        return false;
-    }
-    return true;
-}
-
-/**
  * @brief 创建 Excel Application 实例
  */
 bool ExcelSession::CreateExcelInstance() {
@@ -191,7 +126,7 @@ void ExcelSession::SetExcelInvisible() {
     VariantInit(&visible);
     visible.vt = VT_BOOL;
     visible.boolVal = VARIANT_FALSE;
-    SetPropertyNoFail(m_pExcelApp, L"Visible", visible);
+    ExcelComHelper::SetPropertyNoFail(m_pExcelApp, L"Visible", visible);
 }
 
 /**
@@ -199,7 +134,7 @@ void ExcelSession::SetExcelInvisible() {
  */
 bool ExcelSession::GetWorkbooksCollection() {
     VARIANT result;
-    if (!GetProperty(m_pExcelApp, L"Workbooks", result)) {
+    if (!ExcelComHelper::GetProperty(m_pExcelApp, L"Workbooks", result)) {
         return false;
     }
     m_pWorkbooks = result.pdispVal;
@@ -250,7 +185,7 @@ bool ExcelSession::OpenWorkbookFile(const std::wstring& filePath) {
  */
 bool ExcelSession::GetWorksheetsCollection() {
     VARIANT result;
-    if (!GetProperty(m_pWorkbook, L"Worksheets", result)) {
+    if (!ExcelComHelper::GetProperty(m_pWorkbook, L"Worksheets", result)) {
         return false;
     }
     m_pWorksheets = result.pdispVal;
@@ -299,7 +234,7 @@ bool ExcelSession::GetFirstWorksheet() {
  */
 bool ExcelSession::GetUsedRange() {
     VARIANT result;
-    if (!GetProperty(m_pWorksheet, L"UsedRange", result)) {
+    if (!ExcelComHelper::GetProperty(m_pWorksheet, L"UsedRange", result)) {
         return false;
     }
     m_pRange = result.pdispVal;
@@ -418,22 +353,7 @@ std::wstring ExcelSession::GetCellString(long row, long col, const std::wstring&
         return defaultVal;
     }
 
-    std::wstring result = defaultVal;
-
-    // VARIANT 类型处理：
-    // - VT_BSTR: 字符串类型（最常见）
-    // - VT_I4: 32位整数
-    // - VT_R8: 双精度浮点数
-    if (cellValue.vt == VT_BSTR) {
-        result = cellValue.bstrVal;
-    }
-    else if (cellValue.vt == VT_I4) {
-        result = std::to_wstring(cellValue.lVal);
-    }
-    else if (cellValue.vt == VT_R8) {
-        result = std::to_wstring((long long)cellValue.dblVal);
-    }
-
+    std::wstring result = ExcelComHelper::VariantToString(cellValue, defaultVal);
     VariantClear(&cellValue);
     return result;
 }
@@ -452,24 +372,7 @@ long ExcelSession::GetCellLong(long row, long col, long defaultVal) const {
         return defaultVal;
     }
 
-    long result = defaultVal;
-
-    if (cellValue.vt == VT_I4) {
-        result = cellValue.lVal;
-    }
-    else if (cellValue.vt == VT_R8) {
-        result = (long)cellValue.dblVal;
-    }
-    else if (cellValue.vt == VT_BSTR) {
-        // 字符串格式，尝试转换为整数
-        try {
-            result = std::stoi(cellValue.bstrVal);
-        }
-        catch (...) {
-            result = defaultVal;
-        }
-    }
-
+    long result = ExcelComHelper::VariantToLong(cellValue, defaultVal);
     VariantClear(&cellValue);
     return result;
 }
@@ -488,15 +391,7 @@ double ExcelSession::GetCellDouble(long row, long col, double defaultVal) const 
         return defaultVal;
     }
 
-    double result = defaultVal;
-
-    if (cellValue.vt == VT_R8) {
-        result = cellValue.dblVal;
-    }
-    else if (cellValue.vt == VT_I4) {
-        result = (double)cellValue.lVal;
-    }
-
+    double result = ExcelComHelper::VariantToDouble(cellValue, defaultVal);
     VariantClear(&cellValue);
     return result;
 }
@@ -516,39 +411,7 @@ std::wstring ExcelSession::GetCellTime(long row, long col) const {
         return L"";
     }
 
-    std::wstring result;
-
-    // 时间格式处理：
-    // Excel 中的时间可能以三种形式存储：
-    // - VT_BSTR: 字符串格式（如 "0:37:06"）
-    // - VT_DATE: Variant 时间格式（使用 VariantTimeToSystemTime 转换）
-    // - VT_R8: 浮点数格式（0.0 = 0:00:00, 1.0 = 24:00:00）
-    if (cellValue.vt == VT_BSTR) {
-        result = cellValue.bstrVal;
-    }
-    else if (cellValue.vt == VT_DATE) {
-        SYSTEMTIME st;
-        VariantTimeToSystemTime(cellValue.date, &st);
-        wchar_t buffer[32];
-        // 格式：小时:分钟:秒（分钟和秒补零）
-        swprintf_s(buffer, L"%d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
-        result = buffer;
-    }
-    else if (cellValue.vt == VT_R8) {
-        double timeVal = cellValue.dblVal;
-        // 浮点数转时间：0.0 = 0:00:00, 1.0 = 24:00:00
-        // 浮点数转时间公式：
-        // - 小时 = timeVal * 24  （一天24小时）
-        // - 分钟 = (小数部分) * 60  （一小时60分钟）
-        // - 秒 = (小数部分) * 60    （一分钟60秒）
-        int hours = (int)(timeVal * 24);  // 乘以24得到小时数
-        int minutes = (int)((timeVal * 24 - hours) * 60);  // 小数部分乘以60得到分钟
-        int seconds = (int)(((timeVal * 24 - hours) * 60 - minutes) * 60);  // 小数部分乘以60得到秒
-        wchar_t buffer[32];
-        swprintf_s(buffer, L"%d:%02d:%02d", hours, minutes, seconds);
-        result = buffer;
-    }
-
+    std::wstring result = ExcelComHelper::VariantToTime(cellValue);
     VariantClear(&cellValue);
     return result;
 }

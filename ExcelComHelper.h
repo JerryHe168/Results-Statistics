@@ -4,95 +4,69 @@
 
 /**
  * @class ExcelComHelper
- * @brief Excel COM 通用辅助类
+ * @brief Excel COM 操作辅助类
  * 
- * 封装常用的 COM 操作模式，减少重复代码：
- * - GetProperty: 获取属性值
- * - SetProperty: 设置属性值
- * - InvokeMethod: 调用方法
- * - GetItem: 获取集合项
- * - SafeRelease: 安全释放 COM 对象
+ * 提供通用的 COM 调用静态方法和单元格值转换方法，
+ * 供 ExcelSession 内部使用。
  */
 class ExcelComHelper {
 public:
     /**
-     * @brief 获取属性值
+     * @brief 获取 COM 对象的属性（带错误输出）
      * @param pDispatch COM 对象指针
-     * @param propName 属性名
-     * @param pResult 输出参数，存储结果
+     * @param propertyName 属性名
+     * @param result 输出结果
      * @return true-成功，false-失败
      */
-    static bool GetProperty(IDispatch* pDispatch, const std::wstring& propName, VARIANT* pResult);
+    static bool GetProperty(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& result);
 
     /**
-     * @brief 获取 IDispatch 类型的属性
+     * @brief 设置 COM 对象的属性（不带错误输出，用于 Visible 这类非关键属性）
      * @param pDispatch COM 对象指针
-     * @param propName 属性名
-     * @return IDispatch* 指针，失败返回 NULL
-     */
-    static IDispatch* GetPropertyDispatch(IDispatch* pDispatch, const std::wstring& propName);
-
-    /**
-     * @brief 设置属性值
-     * @param pDispatch COM 对象指针
-     * @param propName 属性名
+     * @param propertyName 属性名
      * @param value 属性值
-     * @return true-成功，false-失败
      */
-    static bool SetProperty(IDispatch* pDispatch, const std::wstring& propName, const VARIANT& value);
+    static void SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& value);
 
     /**
-     * @brief 调用无参数方法
+     * @brief 调用 COM 对象的方法（带错误输出）
      * @param pDispatch COM 对象指针
      * @param methodName 方法名
-     * @param pResult 输出参数，存储结果（可为 NULL）
+     * @param args 参数数组
+     * @param argCount 参数个数
+     * @param result 输出结果
      * @return true-成功，false-失败
      */
-    static bool InvokeMethod(IDispatch* pDispatch, const std::wstring& methodName, VARIANT* pResult = NULL);
+    static bool InvokeMethod(IDispatch* pDispatch, const wchar_t* methodName, VARIANT* args, int argCount, VARIANT& result);
 
     /**
-     * @brief 调用单参数方法
-     * @param pDispatch COM 对象指针
-     * @param methodName 方法名
-     * @param arg1 参数1
-     * @param pResult 输出参数，存储结果（可为 NULL）
-     * @return true-成功，false-失败
+     * @brief 将 VARIANT 转换为字符串
+     * @param var 源 VARIANT
+     * @param defaultVal 默认值
+     * @return 转换后的字符串
      */
-    static bool InvokeMethod(IDispatch* pDispatch, const std::wstring& methodName, 
-                              const VARIANT& arg1, VARIANT* pResult = NULL);
+    static std::wstring VariantToString(const VARIANT& var, const std::wstring& defaultVal = L"");
 
     /**
-     * @brief 调用双参数方法
-     * @param pDispatch COM 对象指针
-     * @param methodName 方法名
-     * @param arg1 参数1
-     * @param arg2 参数2
-     * @param pResult 输出参数，存储结果（可为 NULL）
-     * @return true-成功，false-失败
+     * @brief 将 VARIANT 转换为整数
+     * @param var 源 VARIANT
+     * @param defaultVal 默认值
+     * @return 转换后的整数
      */
-    static bool InvokeMethod(IDispatch* pDispatch, const std::wstring& methodName,
-                              const VARIANT& arg1, const VARIANT& arg2, VARIANT* pResult = NULL);
+    static long VariantToLong(const VARIANT& var, long defaultVal = 0);
 
     /**
-     * @brief 获取集合项（单参数，如 Worksheets.Item(1)）
-     * @param pDispatch 集合对象指针
-     * @param index 索引值
-     * @return IDispatch* 指针，失败返回 NULL
+     * @brief 将 VARIANT 转换为浮点数
+     * @param var 源 VARIANT
+     * @param defaultVal 默认值
+     * @return 转换后的浮点数
      */
-    static IDispatch* GetItem(IDispatch* pDispatch, long index);
+    static double VariantToDouble(const VARIANT& var, double defaultVal = 0.0);
 
     /**
-     * @brief 获取集合项（双参数，如 Cells(row, col)）
-     * @param pDispatch 集合对象指针
-     * @param row 行号
-     * @param col 列号
-     * @return IDispatch* 指针，失败返回 NULL
+     * @brief 将 VARIANT 转换为时间字符串
+     * @param var 源 VARIANT
+     * @return 格式化的时间字符串（HH:MM:SS）
      */
-    static IDispatch* GetItem(IDispatch* pDispatch, long row, long col);
-
-    /**
-     * @brief 安全释放 COM 对象
-     * @param pDispatch COM 对象指针引用
-     */
-    static void SafeRelease(IDispatch*& pDispatch);
+    static std::wstring VariantToTime(const VARIANT& var);
 };
