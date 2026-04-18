@@ -47,7 +47,14 @@ bool ExcelWriter::WriteCellInternal(long row, long col, const VARIANT& value) {
         return false;
     }
 
-    IDispatch* pCell = ExcelComHelper::GetItem(m_pWorksheet, row, col);
+    IDispatch* pCells = ExcelComHelper::GetPropertyDispatch(m_pWorksheet, L"Cells");
+    if (!pCells) {
+        return false;
+    }
+
+    IDispatch* pCell = ExcelComHelper::GetItem(pCells, row, col);
+    ExcelComHelper::SafeRelease(pCells);
+
     if (!pCell) {
         return false;
     }
@@ -81,7 +88,7 @@ bool ExcelWriter::CreateNewWorkbook() {
     VariantInit(&visible);
     visible.vt = VT_BOOL;
     visible.boolVal = VARIANT_FALSE;
-    ExcelComHelper::SetProperty(m_pExcelApp, L"Visible", visible);
+    ExcelComHelper::SetPropertyNoFail(m_pExcelApp, L"Visible", visible);
 
     m_pWorkbooks = ExcelComHelper::GetPropertyDispatch(m_pExcelApp, L"Workbooks");
     if (!m_pWorkbooks) {

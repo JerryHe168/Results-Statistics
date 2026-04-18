@@ -76,11 +76,12 @@ bool ExcelComHelper::SetProperty(IDispatch* pDispatch, const wchar_t* propertyNa
     }
 
     VARIANT arg = value;
+    DISPID dispidNamed = DISPID_PROPERTYPUT;
     DISPPARAMS dp;
     dp.cArgs = 1;
     dp.rgvarg = &arg;
-    dp.cNamedArgs = 0;
-    dp.rgdispidNamedArgs = NULL;
+    dp.cNamedArgs = 1;
+    dp.rgdispidNamedArgs = &dispidNamed;
 
     hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
     if (FAILED(hr)) {
@@ -166,6 +167,7 @@ IDispatch* ExcelComHelper::GetItem(IDispatch* pDispatch, long index1, long index
     LPOLESTR ptName = const_cast<LPOLESTR>(L"Item");
     HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
+        std::wcerr << L"Failed to get Item method. HRESULT: " << hr << std::endl;
         return NULL;
     }
 
@@ -188,12 +190,14 @@ IDispatch* ExcelComHelper::GetItem(IDispatch* pDispatch, long index1, long index
     VariantInit(&result);
     hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dp, &result, NULL, NULL);
     if (FAILED(hr)) {
+        std::wcerr << L"Failed to invoke Item method. HRESULT: " << hr << std::endl;
         return NULL;
     }
 
     if (result.vt == VT_DISPATCH) {
         return result.pdispVal;
     }
+    std::wcerr << L"Item method returned non-dispatch type. Type: " << result.vt << std::endl;
     VariantClear(&result);
     return NULL;
 }
