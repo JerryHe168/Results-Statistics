@@ -133,6 +133,7 @@ bool ExcelReader::ReadScoreList(const std::wstring& filePath, std::vector<ScoreE
         // 读取第 2 列：组别
         // 组别可能是字符串（如 "23组"）或数字
         VARIANT cellValue;
+        VariantInit(&cellValue);
         if (session.GetCellValue(row, 2, cellValue)) {
             if (cellValue.vt == VT_BSTR) {
                 entry.group = cellValue.bstrVal;

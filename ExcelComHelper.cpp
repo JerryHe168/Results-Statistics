@@ -49,6 +49,7 @@ bool ExcelComHelper::GetProperty(IDispatch* pDispatch, const wchar_t* propertyNa
  */
 IDispatch* ExcelComHelper::GetPropertyDispatch(IDispatch* pDispatch, const wchar_t* propertyName) {
     VARIANT result;
+    VariantInit(&result);
     if (!GetProperty(pDispatch, propertyName, result)) {
         return NULL;
     }
