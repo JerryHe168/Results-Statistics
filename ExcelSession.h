@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <windows.h>
 #include <string>
 #include "ExcelComHelper.h"
@@ -16,6 +16,9 @@ public:
      * @brief 构造函数
      */
     ExcelSession();
+
+    ExcelSession(const ExcelSession&) = delete;
+    ExcelSession& operator=(const ExcelSession&) = delete;
 
     /**
      * @brief 析构函数

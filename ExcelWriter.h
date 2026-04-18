@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ExcelComHelper.h"
 #include <string>
 #include <vector>
@@ -16,6 +16,9 @@ public:
      * @brief 构造函数
      */
     ExcelWriter();
+
+    ExcelWriter(const ExcelWriter&) = delete;
+    ExcelWriter& operator=(const ExcelWriter&) = delete;
 
     /**
      * @brief 析构函数

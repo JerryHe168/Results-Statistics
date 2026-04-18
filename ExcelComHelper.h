@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <windows.h>
 #include <string>
 
@@ -11,6 +11,8 @@
  */
 class ExcelComHelper {
 public:
+    ExcelComHelper(const ExcelComHelper&) = delete;
+    ExcelComHelper& operator=(const ExcelComHelper&) = delete;
     /**
      * @brief 安全释放 COM 对象
      * @param pDispatch COM 对象指针引用，释放后置为 NULL
