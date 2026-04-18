@@ -134,6 +134,7 @@ void ExcelSession::SetExcelInvisible() {
  */
 bool ExcelSession::GetWorkbooksCollection() {
     VARIANT result;
+    VariantInit(&result);
     if (!ExcelComHelper::GetProperty(m_pExcelApp, L"Workbooks", result)) {
         return false;
     }
@@ -185,6 +186,7 @@ bool ExcelSession::OpenWorkbookFile(const std::wstring& filePath) {
  */
 bool ExcelSession::GetWorksheetsCollection() {
     VARIANT result;
+    VariantInit(&result);
     if (!ExcelComHelper::GetProperty(m_pWorkbook, L"Worksheets", result)) {
         return false;
     }
@@ -234,6 +236,7 @@ bool ExcelSession::GetFirstWorksheet() {
  */
 bool ExcelSession::GetUsedRange() {
     VARIANT result;
+    VariantInit(&result);
     if (!ExcelComHelper::GetProperty(m_pWorksheet, L"UsedRange", result)) {
         return false;
     }
@@ -349,6 +352,7 @@ bool ExcelSession::GetCellValue(long row, long col, VARIANT& cellValue) const {
  */
 std::wstring ExcelSession::GetCellString(long row, long col, const std::wstring& defaultVal) const {
     VARIANT cellValue;
+    VariantInit(&cellValue);
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -368,6 +372,7 @@ std::wstring ExcelSession::GetCellString(long row, long col, const std::wstring&
  */
 long ExcelSession::GetCellLong(long row, long col, long defaultVal) const {
     VARIANT cellValue;
+    VariantInit(&cellValue);
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -387,6 +392,7 @@ long ExcelSession::GetCellLong(long row, long col, long defaultVal) const {
  */
 double ExcelSession::GetCellDouble(long row, long col, double defaultVal) const {
     VARIANT cellValue;
+    VariantInit(&cellValue);
     if (!GetCellValue(row, col, cellValue)) {
         return defaultVal;
     }
@@ -407,6 +413,7 @@ double ExcelSession::GetCellDouble(long row, long col, double defaultVal) const 
  */
 std::wstring ExcelSession::GetCellTime(long row, long col) const {
     VARIANT cellValue;
+    VariantInit(&cellValue);
     if (!GetCellValue(row, col, cellValue)) {
         return L"";
     }
