@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <windows.h>
 #include <string>
+#include "ExcelComHelper.h"
 
 /**
  * @class ExcelSession
@@ -117,34 +118,6 @@ private:
      * @brief 释放所有 COM 对象
      */
     void Release();
-
-    /**
-     * @brief 获取 COM 对象的属性（带错误输出）
-     * @param pDispatch COM 对象指针
-     * @param propertyName 属性名
-     * @param result 输出结果
-     * @return true-成功，false-失败
-     */
-    bool GetProperty(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& result);
-
-    /**
-     * @brief 设置 COM 对象的属性（不带错误输出，用于 Visible 这类非关键属性）
-     * @param pDispatch COM 对象指针
-     * @param propertyName 属性名
-     * @param value 属性值
-     */
-    void SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* propertyName, VARIANT& value);
-
-    /**
-     * @brief 调用 COM 对象的方法（带错误输出）
-     * @param pDispatch COM 对象指针
-     * @param methodName 方法名
-     * @param args 参数数组
-     * @param argCount 参数个数
-     * @param result 输出结果
-     * @return true-成功，false-失败
-     */
-    bool InvokeMethod(IDispatch* pDispatch, const wchar_t* methodName, VARIANT* args, int argCount, VARIANT& result);
 
     /**
      * @brief 创建 Excel Application 实例
