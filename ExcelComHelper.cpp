@@ -76,12 +76,11 @@ bool ExcelComHelper::SetProperty(IDispatch* pDispatch, const wchar_t* propertyNa
     }
 
     VARIANT arg = value;
-    DISPID dispidNamed = DISPID_PROPERTYPUT;
     DISPPARAMS dp;
     dp.cArgs = 1;
     dp.rgvarg = &arg;
-    dp.cNamedArgs = 1;
-    dp.rgdispidNamedArgs = &dispidNamed;
+    dp.cNamedArgs = 0;
+    dp.rgdispidNamedArgs = NULL;
 
     hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
     if (FAILED(hr)) {
@@ -103,12 +102,11 @@ void ExcelComHelper::SetPropertyNoFail(IDispatch* pDispatch, const wchar_t* prop
     LPOLESTR ptName = const_cast<LPOLESTR>(propertyName);
     HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (SUCCEEDED(hr)) {
-        DISPID dispidNamed = DISPID_PROPERTYPUT;
         DISPPARAMS dp;
         dp.cArgs = 1;
         dp.rgvarg = &value;
-        dp.cNamedArgs = 1;
-        dp.rgdispidNamedArgs = &dispidNamed;
+        dp.cNamedArgs = 0;
+        dp.rgdispidNamedArgs = NULL;
         pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
     }
 }
@@ -125,6 +123,7 @@ IDispatch* ExcelComHelper::GetItem(IDispatch* pDispatch, long index) {
     LPOLESTR ptName = const_cast<LPOLESTR>(L"Item");
     HRESULT hr = pDispatch->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
     if (FAILED(hr)) {
+        std::wcerr << L"Failed to get Item method. HRESULT: " << hr << std::endl;
         return NULL;
     }
 
@@ -143,12 +142,14 @@ IDispatch* ExcelComHelper::GetItem(IDispatch* pDispatch, long index) {
     VariantInit(&result);
     hr = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dp, &result, NULL, NULL);
     if (FAILED(hr)) {
+        std::wcerr << L"Failed to invoke Item method. HRESULT: " << hr << std::endl;
         return NULL;
     }
 
     if (result.vt == VT_DISPATCH) {
         return result.pdispVal;
     }
+    std::wcerr << L"Item method returned non-dispatch type. Type: " << result.vt << std::endl;
     VariantClear(&result);
     return NULL;
 }
