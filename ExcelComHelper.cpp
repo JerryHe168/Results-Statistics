@@ -48,8 +48,7 @@ bool ExcelComHelper::GetProperty(IDispatch* pDispatch, const wchar_t* propertyNa
  * @brief 获取 COM 对象的属性（返回 IDispatch*）
  */
 IDispatch* ExcelComHelper::GetPropertyDispatch(IDispatch* pDispatch, const wchar_t* propertyName) {
-    VARIANT result;
-    VariantInit(&result);
+    VARIANT result = { 0 };
     if (!GetProperty(pDispatch, propertyName, result)) {
         return NULL;
     }
