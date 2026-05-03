@@ -297,7 +297,30 @@ std::wstring ExcelComHelper::VariantToString(const VARIANT& var, const std::wstr
         result = std::to_wstring(var.lVal);
     }
     else if (var.vt == VT_R8) {
-        result = std::to_wstring((long long)var.dblVal);
+        double dblVal = var.dblVal;
+        if (dblVal > 0 && dblVal < 1) {
+            int hours = (int)(dblVal * 24);
+            int minutes = (int)((dblVal * 24 - hours) * 60);
+            int seconds = (int)(((dblVal * 24 - hours) * 60 - minutes) * 60);
+            wchar_t buffer[32];
+            swprintf_s(buffer, L"%d:%02d:%02d", hours, minutes, seconds);
+            result = buffer;
+        }
+        else {
+            if (dblVal == (long long)dblVal) {
+                result = std::to_wstring((long long)dblVal);
+            }
+            else {
+                result = std::to_wstring(dblVal);
+            }
+        }
+    }
+    else if (var.vt == VT_DATE) {
+        SYSTEMTIME st;
+        VariantTimeToSystemTime(var.date, &st);
+        wchar_t buffer[32];
+        swprintf_s(buffer, L"%d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
+        result = buffer;
     }
 
     return result;
