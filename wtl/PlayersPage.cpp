@@ -41,6 +41,7 @@ LRESULT CPlayersPage::OnBtnImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
         if (ImportFile(m_strFilePath))
         {
             m_editPath.SetWindowText(m_strFilePath.c_str());
+            ParseParticipants();
             UpdateListView();
         }
         else
@@ -216,4 +217,100 @@ bool CPlayersPage::ImportFile(const std::wstring& filePath)
         MessageBox(L"不支持的文件格式！", L"错误", MB_OK | MB_ICONERROR);
         return false;
     }
+}
+
+void CPlayersPage::ParseParticipants()
+{
+    m_participants.clear();
+
+    if (m_data.empty())
+    {
+        return;
+    }
+
+    for (size_t i = 0; i < m_data.size(); i++)
+    {
+        const auto& row = m_data[i];
+        Participant participant;
+
+        if (row.size() > 0)
+        {
+            participant.maleId = row[0];
+            participant.maleGroupNumber = ExtractGroupNumber(row[0]);
+        }
+        else
+        {
+            participant.maleId = L"";
+            participant.maleGroupNumber = -1;
+        }
+
+        if (row.size() > 1)
+        {
+            participant.maleName = row[1];
+        }
+        else
+        {
+            participant.maleName = L"";
+        }
+
+        if (row.size() > 2)
+        {
+            participant.femaleId = row[2];
+            participant.femaleGroupNumber = ExtractGroupNumber(row[2]);
+        }
+        else
+        {
+            participant.femaleId = L"";
+            participant.femaleGroupNumber = -1;
+        }
+
+        if (row.size() > 3)
+        {
+            participant.femaleName = row[3];
+        }
+        else
+        {
+            participant.femaleName = L"";
+        }
+
+        m_participants.push_back(participant);
+    }
+}
+
+int CPlayersPage::ExtractGroupNumber(const std::wstring& id)
+{
+    if (id.empty())
+    {
+        return -1;
+    }
+
+    int groupNumber = 0;
+    for (wchar_t c : id)
+    {
+        if (c >= L'0' && c <= L'9')
+        {
+            groupNumber = groupNumber * 10 + (c - L'0');
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (groupNumber == 0)
+    {
+        return -1;
+    }
+
+    return groupNumber;
+}
+
+const std::vector<Participant>& CPlayersPage::GetParticipants() const
+{
+    return m_participants;
+}
+
+bool CPlayersPage::HasData() const
+{
+    return !m_participants.empty();
 }

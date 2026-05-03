@@ -27,6 +27,7 @@
 #define IDR_MAINFRAME                  701
 
 #define WM_SWITCH_PAGE                 (WM_USER + 100)
+#define WM_DO_STATISTICS               (WM_USER + 101)
 #define PAGE_PLAYERS                   0
 #define PAGE_SCORES                    1
 #define PAGE_STATS                     2

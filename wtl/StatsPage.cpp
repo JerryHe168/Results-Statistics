@@ -2,6 +2,7 @@
 #include "StatsPage.h"
 #include "PlayersPage.h"
 #include "ScoresPage.h"
+#include "DataProcessor.h"
 #include <windows.h>
 #include <commdlg.h>
 #include <fstream>
@@ -60,21 +61,11 @@ LRESULT CStatsPage::OnBtnTemplate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 LRESULT CStatsPage::OnBtnStatistics(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-    CPlayersPage* pPlayersPage = NULL;
-    CScoresPage* pScoresPage = NULL;
-
     HWND hWndMain = GetParent();
     if (hWndMain != NULL)
     {
-        HWND hWndActive = ::GetActiveWindow();
+        ::SendMessage(hWndMain, WM_DO_STATISTICS, 0, 0);
     }
-
-    MessageBox(L"请先导入选手和成绩数据！\n\n"
-               L"操作步骤：\n"
-               L"1. 点击\"选手\"按钮，导入选手数据\n"
-               L"2. 点击\"成绩\"按钮，导入成绩数据\n"
-               L"3. 然后再点击\"统计\"按钮进行统计",
-               L"提示", MB_OK | MB_ICONINFORMATION);
     return 0;
 }
 

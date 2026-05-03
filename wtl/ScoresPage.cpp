@@ -41,6 +41,7 @@ LRESULT CScoresPage::OnBtnImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
         if (ImportFile(m_strFilePath))
         {
             m_editPath.SetWindowText(m_strFilePath.c_str());
+            ParseScoreEntries();
             UpdateListView();
         }
         else
@@ -216,4 +217,112 @@ bool CScoresPage::ImportFile(const std::wstring& filePath)
         MessageBox(L"不支持的文件格式！", L"错误", MB_OK | MB_ICONERROR);
         return false;
     }
+}
+
+void CScoresPage::ParseScoreEntries()
+{
+    m_scoreEntries.clear();
+
+    if (m_data.empty())
+    {
+        return;
+    }
+
+    for (size_t i = 0; i < m_data.size(); i++)
+    {
+        const auto& row = m_data[i];
+        ScoreEntry scoreEntry;
+
+        if (row.size() > 0)
+        {
+            scoreEntry.rank = StringToInt(row[0]);
+        }
+        else
+        {
+            scoreEntry.rank = 0;
+        }
+
+        if (row.size() > 1)
+        {
+            scoreEntry.group = row[1];
+            scoreEntry.groupNumber = ExtractGroupNumberFromGroup(row[1]);
+        }
+        else
+        {
+            scoreEntry.group = L"";
+            scoreEntry.groupNumber = -1;
+        }
+
+        if (row.size() > 2)
+        {
+            scoreEntry.time = row[2];
+        }
+        else
+        {
+            scoreEntry.time = L"";
+        }
+
+        m_scoreEntries.push_back(scoreEntry);
+    }
+}
+
+int CScoresPage::ExtractGroupNumberFromGroup(const std::wstring& group)
+{
+    if (group.empty())
+    {
+        return -1;
+    }
+
+    int groupNumber = 0;
+    for (wchar_t c : group)
+    {
+        if (c >= L'0' && c <= L'9')
+        {
+            groupNumber = groupNumber * 10 + (c - L'0');
+        }
+        else if (groupNumber > 0)
+        {
+            break;
+        }
+    }
+
+    if (groupNumber == 0)
+    {
+        return -1;
+    }
+
+    return groupNumber;
+}
+
+int CScoresPage::StringToInt(const std::wstring& str)
+{
+    if (str.empty())
+    {
+        return 0;
+    }
+
+    int result = 0;
+    for (wchar_t c : str)
+    {
+        if (c >= L'0' && c <= L'9')
+        {
+            result = result * 10 + (c - L'0');
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return result;
+}
+
+const std::vector<ScoreEntry>& CScoresPage::GetScoreEntries() const
+{
+    return m_scoreEntries;
+}
+
+bool CScoresPage::HasData() const
+{
+    return !m_scoreEntries.empty();
 }

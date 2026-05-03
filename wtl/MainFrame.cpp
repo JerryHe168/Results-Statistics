@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "MainFrame.h"
+#include "DataProcessor.h"
 #include <windows.h>
 #include <objbase.h>
 
@@ -125,4 +126,34 @@ void CMainFrame::LayoutPages()
     int nPageWidth = rcClient.right - nNavBarWidth;
 
     ::SetWindowPos(m_hCurrentPage, NULL, nPageX, 0, nPageWidth, rcClient.bottom, SWP_NOZORDER);
+}
+
+LRESULT CMainFrame::OnDoStatistics(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    if (!m_playersPage.HasData())
+    {
+        m_statsPage.MessageBox(L"请先导入选手数据！\n\n操作步骤：\n1. 点击\"选手\"按钮，导入选手数据\n2. 点击\"成绩\"按钮，导入成绩数据\n3. 然后再点击\"统计\"按钮进行统计",
+                               L"提示", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
+
+    if (!m_scoresPage.HasData())
+    {
+        m_statsPage.MessageBox(L"请先导入成绩数据！\n\n操作步骤：\n1. 点击\"选手\"按钮，导入选手数据\n2. 点击\"成绩\"按钮，导入成绩数据\n3. 然后再点击\"统计\"按钮进行统计",
+                               L"提示", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
+
+    DataProcessor processor;
+    processor.ProcessData(m_playersPage.GetParticipants(),
+                          m_scoresPage.GetScoreEntries(),
+                          m_statsPage.m_results);
+
+    m_statsPage.UpdateListViewWithResults();
+
+    int nCount = (int)m_statsPage.m_results.size();
+    std::wstring strMsg = L"统计完成！共 " + std::to_wstring(nCount) + L" 条记录。";
+    m_statsPage.MessageBox(strMsg.c_str(), L"提示", MB_OK | MB_ICONINFORMATION);
+
+    return 0;
 }
