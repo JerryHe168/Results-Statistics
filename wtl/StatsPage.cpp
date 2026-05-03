@@ -62,7 +62,7 @@ void CStatsPage::LayoutControls()
     int nListX = nMargin;
     int nListY = nMargin + nToolbarHeight;
     int nListWidth = (rcClient.right - rcClient.left) - nMargin * 2;
-    int nListHeight = (rcClient.bottom - rcClient.top) - nMargin - nToolbarHeight;
+    int nListHeight = (rcClient.bottom - rcClient.top) - nMargin * 2 - nToolbarHeight;
 
     m_btnStatistics.SetWindowPos(NULL, nStatisticsX, nStatisticsY, nButtonWidth, nButtonHeight, SWP_NOZORDER);
     m_btnExport.SetWindowPos(NULL, nExportX, nExportY, nButtonWidth, nButtonHeight, SWP_NOZORDER);

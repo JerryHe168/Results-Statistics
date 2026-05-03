@@ -56,7 +56,7 @@ void CScoresPage::LayoutControls()
     int nListX = nMargin;
     int nListY = nMargin + nToolbarHeight;
     int nListWidth = (rcClient.right - rcClient.left) - nMargin * 2;
-    int nListHeight = (rcClient.bottom - rcClient.top) - nMargin - nToolbarHeight;
+    int nListHeight = (rcClient.bottom - rcClient.top) - nMargin * 2 - nToolbarHeight;
 
     m_editPath.SetWindowPos(NULL, nEditX, nEditY, nEditWidth, nButtonHeight, SWP_NOZORDER);
     m_btnImport.SetWindowPos(NULL, nButtonX, nButtonY, nButtonWidth, nButtonHeight, SWP_NOZORDER);
