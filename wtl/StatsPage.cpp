@@ -241,11 +241,51 @@ bool CStatsPage::ShowFileDialogForExport(std::wstring& filePath)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
 
     if (GetSaveFileName(&ofn) == TRUE)
     {
         filePath = szFile;
+
+        std::wstring lowerPath = filePath;
+        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
+
+        bool hasExtension = false;
+        if (lowerPath.length() >= 5)
+        {
+            std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
+            if (ext == L".xlsx")
+            {
+                hasExtension = true;
+            }
+        }
+        if (!hasExtension && lowerPath.length() >= 4)
+        {
+            std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
+            if (ext == L".xls" || ext == L".csv")
+            {
+                hasExtension = true;
+            }
+        }
+
+        if (!hasExtension)
+        {
+            switch (ofn.nFilterIndex)
+            {
+            case 1:
+                filePath += L".xlsx";
+                break;
+            case 2:
+                filePath += L".xls";
+                break;
+            case 3:
+                filePath += L".csv";
+                break;
+            default:
+                break;
+            }
+        }
+
         return true;
     }
     return false;
@@ -326,8 +366,38 @@ bool CStatsPage::ExportResults(const std::wstring& filePath)
         return false;
     }
 
-    DataProcessor processor;
-    return processor.ExportResults(filePath, m_results);
+    ExcelWriter writer;
+
+    if (!writer.CreateNewWorkbook())
+    {
+        return false;
+    }
+
+    if (!m_templateHeaders.empty())
+    {
+        for (size_t i = 0; i < m_templateHeaders.size(); i++)
+        {
+            writer.WriteCell(1, (long)(i + 1), m_templateHeaders[i]);
+        }
+    }
+    else
+    {
+        writer.WriteCell(1, 1, L"名次");
+        writer.WriteCell(1, 2, L"组别");
+        writer.WriteCell(1, 3, L"姓名");
+        writer.WriteCell(1, 4, L"成绩");
+    }
+
+    for (size_t i = 0; i < m_results.size(); i++)
+    {
+        long row = (long)(i + 2);
+        writer.WriteCell(row, 1, m_results[i].rank);
+        writer.WriteCell(row, 2, m_results[i].group);
+        writer.WriteCell(row, 3, m_results[i].names);
+        writer.WriteCell(row, 4, m_results[i].time);
+    }
+
+    return writer.SaveAndClose(filePath);
 }
 
 bool CStatsPage::ExportResultsToCsv(const std::wstring& filePath)
