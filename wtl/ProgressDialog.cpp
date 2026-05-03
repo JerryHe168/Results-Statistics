@@ -4,6 +4,8 @@
 CProgressDialog::CProgressDialog()
     : m_pOperation(NULL)
     , m_bCancelled(false)
+    , m_bCompleted(false)
+    , m_bHasError(false)
 {
 }
 
@@ -20,7 +22,15 @@ LRESULT CProgressDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
     m_progressBar.SetRange(0, 100);
     m_progressBar.SetPos(0);
 
-    SetProgressText(L"正在处理...");
+    if (m_pOperation != NULL)
+    {
+        SetProgressText(m_pOperation->GetProgressMessage());
+        SetProgressValue(m_pOperation->GetProgress());
+    }
+    else
+    {
+        SetProgressText(L"正在处理...");
+    }
 
     SetTimer(1, 100, NULL);
 
@@ -34,61 +44,66 @@ LRESULT CProgressDialog::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 
 LRESULT CProgressDialog::OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
-    if (m_pOperation != NULL && !m_pOperation->IsRunning())
+    if (m_pOperation == NULL)
     {
         KillTimer(1);
         EndDialog(IDOK);
+        return 0;
     }
-    return 0;
-}
 
-LRESULT CProgressDialog::OnAsyncProgress(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-{
-    int progress = LOWORD(lParam);
-    std::wstring* pMessage = (std::wstring*)HIWORD(lParam);
-
-    if (pMessage != NULL)
+    if (m_pOperation->IsRunning())
     {
-        SetProgressText(*pMessage);
-        delete pMessage;
+        SetProgressText(m_pOperation->GetProgressMessage());
+        SetProgressValue(m_pOperation->GetProgress());
+        return 0;
     }
 
-    SetProgressValue(progress);
-    return 0;
-}
-
-LRESULT CProgressDialog::OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
     KillTimer(1);
-    EndDialog(IDOK);
-    return 0;
-}
 
-LRESULT CProgressDialog::OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-{
-    std::wstring* pError = (std::wstring*)lParam;
-    if (pError != NULL)
+    if (m_pOperation->HasError())
     {
-        MessageBox(pError->c_str(), L"错误", MB_OK | MB_ICONERROR);
-        delete pError;
+        m_bHasError = true;
+        m_errorMessage = m_pOperation->GetErrorMessage();
+        EndDialog(IDABORT);
+    }
+    else if (m_pOperation->IsCancelled())
+    {
+        m_bCancelled = true;
+        EndDialog(IDCANCEL);
+    }
+    else if (m_pOperation->IsCompleted())
+    {
+        m_bCompleted = true;
+        EndDialog(IDOK);
+    }
+    else
+    {
+        EndDialog(IDOK);
     }
 
-    KillTimer(1);
-    EndDialog(IDABORT);
     return 0;
 }
 
-LRESULT CProgressDialog::OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+LRESULT CProgressDialog::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
-    m_bCancelled = true;
-    KillTimer(1);
-    EndDialog(IDCANCEL);
+    if (m_pOperation != NULL && m_pOperation->IsRunning())
+    {
+        m_pOperation->Cancel();
+        m_bCancelled = true;
+        m_btnCancel.EnableWindow(FALSE);
+        SetProgressText(L"正在取消...");
+    }
+    else
+    {
+        KillTimer(1);
+        EndDialog(IDCANCEL);
+    }
     return 0;
 }
 
 LRESULT CProgressDialog::OnBtnCancel(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-    if (m_pOperation != NULL)
+    if (m_pOperation != NULL && m_pOperation->IsRunning())
     {
         m_pOperation->Cancel();
         m_bCancelled = true;
