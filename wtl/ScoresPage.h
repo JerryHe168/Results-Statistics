@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include "DataTypes.h"
 #include "ExcelReader.h"
 #include "CsvReader.h"
 #include <string>
@@ -25,6 +26,7 @@ public:
     std::wstring m_strFilePath;
     std::vector<std::wstring> m_headers;
     std::vector<std::vector<std::wstring>> m_data;
+    std::vector<ScoreEntry> m_scoreEntries;
 
     BEGIN_MSG_MAP(CScoresPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -46,4 +48,10 @@ public:
     bool ShowFileDialog();
     bool ImportFile(const std::wstring& filePath);
     ImportFileFormatScores DetectFileFormat(const std::wstring& filePath);
+
+    void ParseScoreEntries();
+    int ExtractGroupNumberFromGroup(const std::wstring& group);
+    int StringToInt(const std::wstring& str);
+    const std::vector<ScoreEntry>& GetScoreEntries() const;
+    bool HasData() const;
 };

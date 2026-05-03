@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include "DataTypes.h"
 #include "ExcelReader.h"
 #include "CsvReader.h"
 #include <string>
@@ -25,6 +26,7 @@ public:
     std::wstring m_strFilePath;
     std::vector<std::wstring> m_headers;
     std::vector<std::vector<std::wstring>> m_data;
+    std::vector<Participant> m_participants;
 
     BEGIN_MSG_MAP(CPlayersPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -46,4 +48,9 @@ public:
     bool ShowFileDialog();
     bool ImportFile(const std::wstring& filePath);
     ImportFileFormatPlayers DetectFileFormat(const std::wstring& filePath);
+
+    void ParseParticipants();
+    int ExtractGroupNumber(const std::wstring& id);
+    const std::vector<Participant>& GetParticipants() const;
+    bool HasData() const;
 };
