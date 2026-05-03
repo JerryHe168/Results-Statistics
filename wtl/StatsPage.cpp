@@ -366,38 +366,15 @@ bool CStatsPage::ExportResults(const std::wstring& filePath)
         return false;
     }
 
-    ExcelWriter writer;
-
-    if (!writer.CreateNewWorkbook())
-    {
-        return false;
-    }
-
+    DataProcessor processor;
     if (!m_templateHeaders.empty())
     {
-        for (size_t i = 0; i < m_templateHeaders.size(); i++)
-        {
-            writer.WriteCell(1, (long)(i + 1), m_templateHeaders[i]);
-        }
+        return processor.ExportResults(filePath, m_results, m_templateHeaders);
     }
     else
     {
-        writer.WriteCell(1, 1, L"名次");
-        writer.WriteCell(1, 2, L"组别");
-        writer.WriteCell(1, 3, L"姓名");
-        writer.WriteCell(1, 4, L"成绩");
+        return processor.ExportResults(filePath, m_results);
     }
-
-    for (size_t i = 0; i < m_results.size(); i++)
-    {
-        long row = (long)(i + 2);
-        writer.WriteCell(row, 1, m_results[i].rank);
-        writer.WriteCell(row, 2, m_results[i].group);
-        writer.WriteCell(row, 3, m_results[i].names);
-        writer.WriteCell(row, 4, m_results[i].time);
-    }
-
-    return writer.SaveAndClose(filePath);
 }
 
 bool CStatsPage::ExportResultsToCsv(const std::wstring& filePath)
@@ -407,97 +384,13 @@ bool CStatsPage::ExportResultsToCsv(const std::wstring& filePath)
         return false;
     }
 
-    FILE* file = NULL;
-    errno_t err = _wfopen_s(&file, filePath.c_str(), L"wb");
-    if (err != 0 || file == NULL)
-    {
-        return false;
-    }
-
-    unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
-    fwrite(bom, 1, sizeof(bom), file);
-
+    DataProcessor processor;
     if (!m_templateHeaders.empty())
     {
-        for (size_t i = 0; i < m_templateHeaders.size(); i++)
-        {
-            if (i > 0)
-            {
-                fprintf(file, ",");
-            }
-            fprintf(file, "%s", EscapeCsvField(m_templateHeaders[i]).c_str());
-        }
-        fprintf(file, "\r\n");
+        return processor.ExportResultsToCsv(filePath, m_results, m_templateHeaders);
     }
     else
     {
-        fprintf(file, "名次,组别,姓名,成绩\r\n");
+        return processor.ExportResultsToCsv(filePath, m_results);
     }
-
-    for (const auto& result : m_results)
-    {
-        fprintf(file, "%d,", result.rank);
-        fprintf(file, "%s,", EscapeCsvField(result.group).c_str());
-        fprintf(file, "%s,", EscapeCsvField(result.names).c_str());
-        fprintf(file, "%s\r\n", EscapeCsvField(result.time).c_str());
-    }
-
-    fclose(file);
-    return true;
-}
-
-std::string CStatsPage::WStringToString(const std::wstring& wstr) const
-{
-    if (wstr.empty())
-    {
-        return std::string();
-    }
-
-    int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
-    if (size <= 0)
-    {
-        return std::string();
-    }
-
-    std::string result(size - 1, 0);
-    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], size, NULL, NULL);
-
-    return result;
-}
-
-std::string CStatsPage::EscapeCsvField(const std::wstring& field) const
-{
-    std::string str = WStringToString(field);
-
-    bool needsQuotes = false;
-    if (str.find(',') != std::string::npos ||
-        str.find('"') != std::string::npos ||
-        str.find('\n') != std::string::npos ||
-        str.find('\r') != std::string::npos)
-    {
-        needsQuotes = true;
-    }
-
-    if (!needsQuotes)
-    {
-        return str;
-    }
-
-    std::string escaped;
-    escaped += '"';
-
-    for (char c : str)
-    {
-        if (c == '"')
-        {
-            escaped += "\"\"";
-        }
-        else
-        {
-            escaped += c;
-        }
-    }
-
-    escaped += '"';
-    return escaped;
 }
