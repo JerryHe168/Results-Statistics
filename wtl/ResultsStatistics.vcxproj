@@ -160,6 +160,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ExcelComHelper.cpp" />
+    <ClCompile Include="ExcelSession.cpp" />
+    <ClCompile Include="ExcelReader.cpp" />
+    <ClCompile Include="CsvReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h" />
@@ -169,6 +173,11 @@
     <ClInclude Include="ScoresPage.h" />
     <ClInclude Include="StatsPage.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="DataTypes.h" />
+    <ClInclude Include="ExcelComHelper.h" />
+    <ClInclude Include="ExcelSession.h" />
+    <ClInclude Include="ExcelReader.h" />
+    <ClInclude Include="CsvReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ResultsStatistics.rc" />

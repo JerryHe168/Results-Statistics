@@ -1,0 +1,54 @@
+#pragma once
+#include <string>
+#include <vector>
+#include <unordered_map>
+
+/**
+ * @file DataTypes.h
+ * @brief 数据类型定义文件
+ * 
+ * 本文件定义了程序中使用的所有核心数据结构。
+ */
+
+/**
+ * @brief 报名信息结构体
+ * 
+ * 存储从报名信息Excel/CSV中读取的每一行数据，
+ * 包含一对男女生的编号、姓名及其对应的组号。
+ * 
+ * 注意：男生和女生可能属于不同的组。
+ */
+struct Participant {
+    std::wstring maleId;         // 男生编号，如 "12A", "18A", "23A"
+    std::wstring maleName;       // 男生姓名
+    int maleGroupNumber;         // 从男生编号提取的组号，如 12, 18, 23
+    std::wstring femaleId;       // 女生编号，如 "17B", "13B", "16B"
+    std::wstring femaleName;     // 女生姓名
+    int femaleGroupNumber;       // 从女生编号提取的组号，如 17, 13, 16
+};
+
+/**
+ * @brief 成绩条目结构体
+ * 
+ * 存储从成绩清单Excel/CSV中读取的每一行数据，
+ * 包含名次、组别、成绩时间。
+ */
+struct ScoreEntry {
+    int rank;                    // 名次，如 1, 2, 3, 4, 5
+    std::wstring group;          // 组别，如 "13组", "22组", "23组"
+    std::wstring time;           // 成绩时间，如 "0:37:06", "0:38:49"
+    int groupNumber;             // 从组别提取的组号，如 13, 22, 23
+};
+
+/**
+ * @brief 最终结果条目结构体
+ * 
+ * 存储数据匹配后的最终结果，
+ * 将成绩条目与报名信息中的姓名关联起来。
+ */
+struct ResultEntry {
+    int rank;                    // 名次
+    std::wstring group;          // 组别
+    std::wstring names;          // 拼接后的姓名（男生姓名 + 空格 + 女生姓名）
+    std::wstring time;           // 成绩时间
+};

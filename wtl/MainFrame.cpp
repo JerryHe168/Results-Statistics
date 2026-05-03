@@ -1,5 +1,9 @@
 ﻿#include "stdafx.h"
 #include "MainFrame.h"
+#include <windows.h>
+#include <objbase.h>
+
+#pragma comment(lib, "ole32.lib")
 
 CMainFrame::CMainFrame() : m_hCurrentPage(NULL)
 {
@@ -25,6 +29,12 @@ BOOL CMainFrame::OnIdle()
 
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED(hr))
+    {
+        MessageBox(L"Failed to initialize COM library!", L"Error", MB_OK | MB_ICONERROR);
+    }
+
     m_hWndClient = NULL;
 
     SetWindowText(L"成绩统计程序");
@@ -60,6 +70,7 @@ LRESULT CMainFrame::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
+    CoUninitialize();
     PostQuitMessage(0);
     bHandled = FALSE;
     return 1;
