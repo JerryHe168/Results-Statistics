@@ -166,6 +166,8 @@
     <ClCompile Include="CsvReader.cpp" />
     <ClCompile Include="DataProcessor.cpp" />
     <ClCompile Include="ExcelWriter.cpp" />
+    <ClCompile Include="AsyncOperation.cpp" />
+    <ClCompile Include="ProgressDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h" />
@@ -182,6 +184,8 @@
     <ClInclude Include="CsvReader.h" />
     <ClInclude Include="DataProcessor.h" />
     <ClInclude Include="ExcelWriter.h" />
+    <ClInclude Include="AsyncOperation.h" />
+    <ClInclude Include="ProgressDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ResultsStatistics.rc" />
