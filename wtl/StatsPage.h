@@ -5,7 +5,6 @@
 #include "DataTypes.h"
 #include "DataProcessor.h"
 #include "ExcelReader.h"
-#include "ExcelWriter.h"
 #include "CsvReader.h"
 #include <string>
 #include <vector>
@@ -63,7 +62,4 @@ public:
 
     bool ExportResults(const std::wstring& filePath);
     bool ExportResultsToCsv(const std::wstring& filePath);
-
-    std::string WStringToString(const std::wstring& wstr) const;
-    std::string EscapeCsvField(const std::wstring& field) const;
 };

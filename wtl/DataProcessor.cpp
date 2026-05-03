@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #pragma execution_character_set("utf-8")
 
 /**
@@ -143,6 +143,20 @@ void DataProcessor::ProcessData(const std::vector<Participant>& participants,
  * @return true-导出成功，false-导出失败
  */
 bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
+    std::vector<std::wstring> defaultHeaders;
+    defaultHeaders.push_back(L"名次");
+    defaultHeaders.push_back(L"组别");
+    defaultHeaders.push_back(L"姓名");
+    defaultHeaders.push_back(L"成绩");
+    return ExportResults(filePath, results, defaultHeaders);
+}
+
+/**
+ * @brief 导出结果到Excel文件（使用自定义表头）
+ */
+bool DataProcessor::ExportResults(const std::wstring& filePath, 
+                                   const std::vector<ResultEntry>& results,
+                                   const std::vector<std::wstring>& headers) {
     if (results.empty()) {
         std::wcerr << L"Warning: No results to export" << std::endl;
     }
@@ -155,10 +169,9 @@ bool DataProcessor::ExportResults(const std::wstring& filePath, const std::vecto
     }
 
     // 写入表头
-    writer.WriteCell(1, 1, L"Rank");
-    writer.WriteCell(1, 2, L"Group");
-    writer.WriteCell(1, 3, L"Names");
-    writer.WriteCell(1, 4, L"Score");
+    for (size_t i = 0; i < headers.size(); i++) {
+        writer.WriteCell(1, (long)(i + 1), headers[i]);
+    }
 
     // 写入数据行
     for (size_t i = 0; i < results.size(); i++) {
@@ -246,6 +259,20 @@ std::string DataProcessor::EscapeCsvField(const std::wstring& field) const {
  * @return true-导出成功，false-导出失败
  */
 bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::vector<ResultEntry>& results) {
+    std::vector<std::wstring> defaultHeaders;
+    defaultHeaders.push_back(L"名次");
+    defaultHeaders.push_back(L"组别");
+    defaultHeaders.push_back(L"姓名");
+    defaultHeaders.push_back(L"成绩");
+    return ExportResultsToCsv(filePath, results, defaultHeaders);
+}
+
+/**
+ * @brief 导出结果到CSV文件（使用自定义表头）
+ */
+bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, 
+                                        const std::vector<ResultEntry>& results,
+                                        const std::vector<std::wstring>& headers) {
     if (results.empty()) {
         std::wcerr << L"Warning: No results to export" << std::endl;
     }
@@ -260,19 +287,17 @@ bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::
     }
 
     // UTF-8 BOM（字节顺序标记）：0xEF 0xBB 0xBF
-    // 
-    // 为什么需要 BOM：
-    // 1. 通知其他程序这是一个 UTF-8 编码的文件
-    // 2. 特别是 Excel 打开 CSV 文件时，如果没有 BOM，
-    //    它可能会错误地使用 ANSI 编码，导致中文乱码
-    // 3. 虽然 BOM 不是 UTF-8 标准要求的，但在 Windows 平台上
-    //    这是一个广泛使用的约定
     unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
     fwrite(bom, 1, sizeof(bom), file);
 
-    // 写入表头：Rank, Group, Names, Score
-    // 使用 \r\n 作为换行符（Windows 标准）
-    fprintf(file, "Rank,Group,Names,Score\r\n");
+    // 写入表头
+    for (size_t i = 0; i < headers.size(); i++) {
+        if (i > 0) {
+            fprintf(file, ",");
+        }
+        fprintf(file, "%s", EscapeCsvField(headers[i]).c_str());
+    }
+    fprintf(file, "\r\n");
 
     for (const auto& result : results) {
         fprintf(file, "%d,", result.rank);
@@ -285,4 +310,31 @@ bool DataProcessor::ExportResultsToCsv(const std::wstring& filePath, const std::
     fclose(file);
 
     return true;
+}
+
+/**
+ * @brief 检测文件格式
+ */
+FileFormat DataProcessor::DetectFileFormat(const std::wstring& filePath) {
+    std::wstring lowerPath = filePath;
+    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
+
+    if (lowerPath.length() >= 5) {
+        std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
+        if (ext == L".xlsx") {
+            return FileFormat::Excel;
+        }
+    }
+
+    if (lowerPath.length() >= 4) {
+        std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
+        if (ext == L".xls") {
+            return FileFormat::Excel;
+        }
+        if (ext == L".csv") {
+            return FileFormat::Csv;
+        }
+    }
+
+    return FileFormat::Unknown;
 }
