@@ -5,6 +5,7 @@
 #include "DataTypes.h"
 #include "DataProcessor.h"
 #include "ExcelReader.h"
+#include "ExcelWriter.h"
 #include "CsvReader.h"
 #include <string>
 #include <vector>
