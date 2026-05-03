@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "NavigationBar.h"
 
 CNavigationBar::CNavigationBar() : m_nSelectedButton(0)
@@ -14,6 +14,10 @@ LRESULT CNavigationBar::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
     m_btnPlayers = GetDlgItem(IDC_BTN_PLAYERS);
     m_btnScores = GetDlgItem(IDC_BTN_SCORES);
     m_btnStats = GetDlgItem(IDC_BTN_STATS);
+
+    m_btnPlayers.SetWindowText(L"选手");
+    m_btnScores.SetWindowText(L"成绩");
+    m_btnStats.SetWindowText(L"统计");
 
     UpdateButtonStates();
     LayoutButtons();

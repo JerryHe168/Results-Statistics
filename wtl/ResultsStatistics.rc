@@ -88,5 +88,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "成绩统计程序\nResultsStatistics\n\n\n\n\n101\n10001"
+    IDR_MAINFRAME           "Results Statistics\nResultsStatistics\n\n\n\n\n101\n10001"
 END
