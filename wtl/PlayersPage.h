@@ -2,13 +2,13 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include "ExcelReader.h"
+#include "CsvReader.h"
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 
-enum class ImportFileFormat {
+enum class ImportFileFormatPlayers {
     Excel,
     Csv,
     Unknown
@@ -45,9 +45,5 @@ public:
     void ClearListView();
     bool ShowFileDialog();
     bool ImportFile(const std::wstring& filePath);
-    bool ImportCsvFile(const std::wstring& filePath);
-    ImportFileFormat DetectFileFormat(const std::wstring& filePath);
-    std::vector<std::wstring> SplitCsvLine(const std::wstring& line);
-    std::wstring Trim(const std::wstring& str);
-    std::wstring StringToWString(const std::string& str);
+    ImportFileFormatPlayers DetectFileFormat(const std::wstring& filePath);
 };

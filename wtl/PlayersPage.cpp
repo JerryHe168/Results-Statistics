@@ -2,7 +2,7 @@
 #include "PlayersPage.h"
 #include <windows.h>
 #include <commdlg.h>
-#include <regex>
+#include <algorithm>
 
 #pragma comment(lib, "comdlg32.lib")
 
@@ -163,7 +163,7 @@ bool CPlayersPage::ShowFileDialog()
     return false;
 }
 
-ImportFileFormat CPlayersPage::DetectFileFormat(const std::wstring& filePath)
+ImportFileFormatPlayers CPlayersPage::DetectFileFormat(const std::wstring& filePath)
 {
     std::wstring lowerPath = filePath;
     std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
@@ -173,11 +173,11 @@ ImportFileFormat CPlayersPage::DetectFileFormat(const std::wstring& filePath)
         std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
         if (ext == L".csv")
         {
-            return ImportFileFormat::Csv;
+            return ImportFileFormatPlayers::Csv;
         }
         if (ext == L".xls")
         {
-            return ImportFileFormat::Excel;
+            return ImportFileFormatPlayers::Excel;
         }
     }
 
@@ -186,11 +186,11 @@ ImportFileFormat CPlayersPage::DetectFileFormat(const std::wstring& filePath)
         std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
         if (ext == L".xlsx")
         {
-            return ImportFileFormat::Excel;
+            return ImportFileFormatPlayers::Excel;
         }
     }
 
-    return ImportFileFormat::Unknown;
+    return ImportFileFormatPlayers::Unknown;
 }
 
 bool CPlayersPage::ImportFile(const std::wstring& filePath)
@@ -198,143 +198,22 @@ bool CPlayersPage::ImportFile(const std::wstring& filePath)
     m_headers.clear();
     m_data.clear();
 
-    ImportFileFormat format = DetectFileFormat(filePath);
+    ImportFileFormatPlayers format = DetectFileFormat(filePath);
 
     switch (format)
     {
-    case ImportFileFormat::Csv:
-        return ImportCsvFile(filePath);
-    case ImportFileFormat::Excel:
-        MessageBox(L"Excel 文件导入需要 COM 自动化支持。\n请先将 Excel 文件另存为 CSV 格式，然后导入 CSV 文件。", L"提示", MB_OK | MB_ICONINFORMATION);
-        return false;
+    case ImportFileFormatPlayers::Excel:
+        {
+            ExcelReader reader;
+            return reader.ReadRawData(filePath, m_headers, m_data);
+        }
+    case ImportFileFormatPlayers::Csv:
+        {
+            CsvReader reader;
+            return reader.ReadRawData(filePath, m_headers, m_data);
+        }
     default:
         MessageBox(L"不支持的文件格式！", L"错误", MB_OK | MB_ICONERROR);
         return false;
     }
-}
-
-bool CPlayersPage::ImportCsvFile(const std::wstring& filePath)
-{
-    FILE* file = NULL;
-    errno_t err = _wfopen_s(&file, filePath.c_str(), L"rb");
-    if (err != 0 || file == NULL)
-    {
-        return false;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    std::string content(fileSize, 0);
-    fread(&content[0], 1, fileSize, file);
-    fclose(file);
-
-    if (content.length() >= 3 &&
-        (unsigned char)content[0] == 0xEF &&
-        (unsigned char)content[1] == 0xBB &&
-        (unsigned char)content[2] == 0xBF)
-    {
-        content = content.substr(3);
-    }
-
-    std::wstring wcontent = StringToWString(content);
-    std::wistringstream iss(wcontent);
-    std::wstring line;
-
-    bool isFirstLine = true;
-    while (std::getline(iss, line))
-    {
-        if (!line.empty() && line.back() == L'\r')
-        {
-            line.pop_back();
-        }
-
-        if (line.empty())
-        {
-            continue;
-        }
-
-        std::vector<std::wstring> columns = SplitCsvLine(line);
-
-        if (isFirstLine)
-        {
-            isFirstLine = false;
-            m_headers = columns;
-        }
-        else
-        {
-            m_data.push_back(columns);
-        }
-    }
-
-    return true;
-}
-
-std::vector<std::wstring> CPlayersPage::SplitCsvLine(const std::wstring& line)
-{
-    std::vector<std::wstring> result;
-    std::wstring current;
-    bool inQuotes = false;
-
-    for (size_t i = 0; i < line.length(); i++)
-    {
-        wchar_t c = line[i];
-
-        if (c == L'"')
-        {
-            if (inQuotes && i + 1 < line.length() && line[i + 1] == L'"')
-            {
-                current += L'"';
-                i++;
-            }
-            else
-            {
-                inQuotes = !inQuotes;
-            }
-        }
-        else if (c == L',' && !inQuotes)
-        {
-            result.push_back(Trim(current));
-            current.clear();
-        }
-        else
-        {
-            current += c;
-        }
-    }
-
-    result.push_back(Trim(current));
-    return result;
-}
-
-std::wstring CPlayersPage::Trim(const std::wstring& str)
-{
-    size_t start = str.find_first_not_of(L" \t\"");
-    if (start == std::wstring::npos)
-    {
-        return L"";
-    }
-
-    size_t end = str.find_last_not_of(L" \t\"");
-    return str.substr(start, end - start + 1);
-}
-
-std::wstring CPlayersPage::StringToWString(const std::string& str)
-{
-    if (str.empty())
-    {
-        return L"";
-    }
-
-    int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
-    if (size <= 0)
-    {
-        return L"";
-    }
-
-    std::wstring result(size - 1, 0);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], size);
-
-    return result;
 }
