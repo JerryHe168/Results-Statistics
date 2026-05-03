@@ -67,12 +67,12 @@ void CNavigationBar::LayoutButtons()
     RECT rcClient;
     GetClientRect(&rcClient);
 
-    int nButtonWidth = rcClient.right - rcClient.left - 20;
-    int nButtonHeight = 40;
-    int nSpacing = 20;
-    int nStartY = 20;
+    int nButtonSize = BUTTON_SIZE;
+    int nSpacing = BUTTON_SPACING;
+    int nStartX = (rcClient.right - rcClient.left - nButtonSize) / 2;
+    int nStartY = NAVBAR_START_Y;
 
-    m_btnPlayers.SetWindowPos(NULL, 10, nStartY, nButtonWidth, nButtonHeight, SWP_NOZORDER);
-    m_btnScores.SetWindowPos(NULL, 10, nStartY + nButtonHeight + nSpacing, nButtonWidth, nButtonHeight, SWP_NOZORDER);
-    m_btnStats.SetWindowPos(NULL, 10, nStartY + 2 * (nButtonHeight + nSpacing), nButtonWidth, nButtonHeight, SWP_NOZORDER);
+    m_btnPlayers.SetWindowPos(NULL, nStartX, nStartY, nButtonSize, nButtonSize, SWP_NOZORDER);
+    m_btnScores.SetWindowPos(NULL, nStartX, nStartY + nButtonSize + nSpacing, nButtonSize, nButtonSize, SWP_NOZORDER);
+    m_btnStats.SetWindowPos(NULL, nStartX, nStartY + 2 * (nButtonSize + nSpacing), nButtonSize, nButtonSize, SWP_NOZORDER);
 }
