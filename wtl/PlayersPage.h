@@ -3,17 +3,12 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "DataTypes.h"
+#include "DataProcessor.h"
 #include "ExcelReader.h"
 #include "CsvReader.h"
 #include <string>
 #include <vector>
 #include <algorithm>
-
-enum class ImportFileFormatPlayers {
-    Excel,
-    Csv,
-    Unknown
-};
 
 class CPlayersPage : public CDialogImpl<CPlayersPage>
 {
@@ -47,7 +42,6 @@ public:
     void ClearListView();
     bool ShowFileDialog();
     bool ImportFile(const std::wstring& filePath);
-    ImportFileFormatPlayers DetectFileFormat(const std::wstring& filePath);
 
     void ParseParticipants();
     int ExtractGroupNumber(const std::wstring& id);

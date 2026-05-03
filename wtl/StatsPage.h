@@ -10,12 +10,6 @@
 #include <vector>
 #include <algorithm>
 
-enum class ImportFileFormatStats {
-    Excel,
-    Csv,
-    Unknown
-};
-
 class CStatsPage : public CDialogImpl<CStatsPage>
 {
 public:
@@ -57,7 +51,6 @@ public:
     bool ShowFileDialogForImport(std::wstring& filePath);
     bool ShowFileDialogForExport(std::wstring& filePath);
 
-    ImportFileFormatStats DetectFileFormat(const std::wstring& filePath);
     bool ImportTemplate(const std::wstring& filePath);
 
     bool ExportResults(const std::wstring& filePath);

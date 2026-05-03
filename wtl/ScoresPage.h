@@ -3,17 +3,12 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "DataTypes.h"
+#include "DataProcessor.h"
 #include "ExcelReader.h"
 #include "CsvReader.h"
 #include <string>
 #include <vector>
 #include <algorithm>
-
-enum class ImportFileFormatScores {
-    Excel,
-    Csv,
-    Unknown
-};
 
 class CScoresPage : public CDialogImpl<CScoresPage>
 {
@@ -47,7 +42,6 @@ public:
     void ClearListView();
     bool ShowFileDialog();
     bool ImportFile(const std::wstring& filePath);
-    ImportFileFormatScores DetectFileFormat(const std::wstring& filePath);
 
     void ParseScoreEntries();
     int ExtractGroupNumberFromGroup(const std::wstring& group);

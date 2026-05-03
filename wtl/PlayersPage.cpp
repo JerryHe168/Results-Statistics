@@ -164,51 +164,22 @@ bool CPlayersPage::ShowFileDialog()
     return false;
 }
 
-ImportFileFormatPlayers CPlayersPage::DetectFileFormat(const std::wstring& filePath)
-{
-    std::wstring lowerPath = filePath;
-    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
-
-    if (lowerPath.length() >= 4)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
-        if (ext == L".csv")
-        {
-            return ImportFileFormatPlayers::Csv;
-        }
-        if (ext == L".xls")
-        {
-            return ImportFileFormatPlayers::Excel;
-        }
-    }
-
-    if (lowerPath.length() >= 5)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
-        if (ext == L".xlsx")
-        {
-            return ImportFileFormatPlayers::Excel;
-        }
-    }
-
-    return ImportFileFormatPlayers::Unknown;
-}
-
 bool CPlayersPage::ImportFile(const std::wstring& filePath)
 {
     m_headers.clear();
     m_data.clear();
 
-    ImportFileFormatPlayers format = DetectFileFormat(filePath);
+    DataProcessor processor;
+    FileFormat format = processor.DetectFileFormat(filePath);
 
     switch (format)
     {
-    case ImportFileFormatPlayers::Excel:
+    case FileFormat::Excel:
         {
             ExcelReader reader;
             return reader.ReadRawData(filePath, m_headers, m_data);
         }
-    case ImportFileFormatPlayers::Csv:
+    case FileFormat::Csv:
         {
             CsvReader reader;
             return reader.ReadRawData(filePath, m_headers, m_data);
