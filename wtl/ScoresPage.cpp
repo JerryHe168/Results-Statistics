@@ -32,7 +32,36 @@ void CScoresPage::StartAsyncImport(const std::wstring& filePath)
 
     CProgressDialog dlg;
     dlg.SetOperation(m_pAsyncImport);
-    dlg.DoModal();
+    INT_PTR nResult = dlg.DoModal();
+
+    if (nResult == IDOK)
+    {
+        m_headers = m_pAsyncImport->GetHeaders();
+        m_data = m_pAsyncImport->GetData();
+        m_strFilePath = m_pAsyncImport->GetFilePath();
+
+        ParseScoreEntries();
+
+        m_editPath.SetWindowText(m_strFilePath.c_str());
+        UpdateListView();
+
+        MessageBox(L"导入完成！", L"提示", MB_OK | MB_ICONINFORMATION);
+    }
+    else if (nResult == IDABORT)
+    {
+        std::wstring errorMsg = dlg.GetErrorMessage();
+        if (errorMsg.empty())
+        {
+            errorMsg = L"导入失败！";
+        }
+        MessageBox(errorMsg.c_str(), L"错误", MB_OK | MB_ICONERROR);
+    }
+    else if (nResult == IDCANCEL)
+    {
+        MessageBox(L"导入已取消。", L"提示", MB_OK | MB_ICONINFORMATION);
+    }
+
+    CleanupAsyncImport();
 }
 
 LRESULT CScoresPage::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -308,61 +337,4 @@ const std::vector<ScoreEntry>& CScoresPage::GetScoreEntries() const
 bool CScoresPage::HasData() const
 {
     return !m_scoreEntries.empty();
-}
-
-LRESULT CScoresPage::OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_IMPORT_SCORES)
-    {
-        return 0;
-    }
-
-    if (m_pAsyncImport == NULL)
-    {
-        return 0;
-    }
-
-    m_headers = m_pAsyncImport->GetHeaders();
-    m_data = m_pAsyncImport->GetData();
-    m_strFilePath = m_pAsyncImport->GetFilePath();
-
-    ParseScoreEntries();
-
-    m_editPath.SetWindowText(m_strFilePath.c_str());
-    UpdateListView();
-
-    CleanupAsyncImport();
-
-    return 0;
-}
-
-LRESULT CScoresPage::OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_IMPORT_SCORES)
-    {
-        return 0;
-    }
-
-    std::wstring* pError = (std::wstring*)lParam;
-    if (pError != NULL)
-    {
-        MessageBox(pError->c_str(), L"错误", MB_OK | MB_ICONERROR);
-        delete pError;
-    }
-
-    CleanupAsyncImport();
-
-    return 0;
-}
-
-LRESULT CScoresPage::OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_IMPORT_SCORES)
-    {
-        return 0;
-    }
-
-    CleanupAsyncImport();
-
-    return 0;
 }
