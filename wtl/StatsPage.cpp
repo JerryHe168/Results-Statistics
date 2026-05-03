@@ -11,11 +11,22 @@
 #pragma comment(lib, "comdlg32.lib")
 
 CStatsPage::CStatsPage()
+    : m_pCurrentAsyncOp(NULL)
 {
 }
 
 CStatsPage::~CStatsPage()
 {
+    CleanupAsyncOp();
+}
+
+void CStatsPage::CleanupAsyncOp()
+{
+    if (m_pCurrentAsyncOp != NULL)
+    {
+        delete m_pCurrentAsyncOp;
+        m_pCurrentAsyncOp = NULL;
+    }
 }
 
 LRESULT CStatsPage::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -46,15 +57,12 @@ LRESULT CStatsPage::OnBtnTemplate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
     std::wstring filePath;
     if (ShowFileDialogForImport(filePath))
     {
-        if (ImportTemplate(filePath))
-        {
-            UpdateListViewWithTemplate();
-            MessageBox(L"模板导入成功！", L"提示", MB_OK | MB_ICONINFORMATION);
-        }
-        else
-        {
-            MessageBox(L"模板导入失败！", L"错误", MB_OK | MB_ICONERROR);
-        }
+        CleanupAsyncOp();
+        m_pCurrentAsyncOp = new AsyncImportTemplate(m_hWnd, filePath);
+
+        CProgressDialog dlg;
+        dlg.SetOperation(m_pCurrentAsyncOp);
+        dlg.DoModal();
     }
     return 0;
 }
@@ -80,32 +88,12 @@ LRESULT CStatsPage::OnBtnExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
     std::wstring filePath;
     if (ShowFileDialogForExport(filePath))
     {
-        DataProcessor processor;
-        FileFormat format = processor.DetectFileFormat(filePath);
+        CleanupAsyncOp();
+        m_pCurrentAsyncOp = new AsyncExport(m_hWnd, filePath, m_results, m_templateHeaders);
 
-        bool success = false;
-        if (format == FileFormat::Excel)
-        {
-            success = ExportResults(filePath);
-        }
-        else if (format == FileFormat::Csv)
-        {
-            success = ExportResultsToCsv(filePath);
-        }
-        else
-        {
-            MessageBox(L"不支持的文件格式！", L"错误", MB_OK | MB_ICONERROR);
-            return 0;
-        }
-
-        if (success)
-        {
-            MessageBox(L"导出成功！", L"提示", MB_OK | MB_ICONINFORMATION);
-        }
-        else
-        {
-            MessageBox(L"导出失败！", L"错误", MB_OK | MB_ICONERROR);
-        }
+        CProgressDialog dlg;
+        dlg.SetOperation(m_pCurrentAsyncOp);
+        dlg.DoModal();
     }
     return 0;
 }
@@ -365,4 +353,52 @@ bool CStatsPage::ExportResultsToCsv(const std::wstring& filePath)
     {
         return processor.ExportResultsToCsv(filePath, m_results);
     }
+}
+
+LRESULT CStatsPage::OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    if (wParam == ASYNC_OP_IMPORT_TEMPLATE)
+    {
+        if (m_pCurrentAsyncOp == NULL)
+        {
+            return 0;
+        }
+
+        AsyncImportTemplate* pImport = dynamic_cast<AsyncImportTemplate*>(m_pCurrentAsyncOp);
+        if (pImport != NULL)
+        {
+            m_templateHeaders = pImport->GetHeaders();
+            UpdateListViewWithTemplate();
+            MessageBox(L"模板导入成功！", L"提示", MB_OK | MB_ICONINFORMATION);
+        }
+
+        CleanupAsyncOp();
+    }
+    else if (wParam == ASYNC_OP_EXPORT)
+    {
+        MessageBox(L"导出成功！", L"提示", MB_OK | MB_ICONINFORMATION);
+        CleanupAsyncOp();
+    }
+
+    return 0;
+}
+
+LRESULT CStatsPage::OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+{
+    std::wstring* pError = (std::wstring*)lParam;
+    if (pError != NULL)
+    {
+        MessageBox(pError->c_str(), L"错误", MB_OK | MB_ICONERROR);
+        delete pError;
+    }
+
+    CleanupAsyncOp();
+
+    return 0;
+}
+
+LRESULT CStatsPage::OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    CleanupAsyncOp();
+    return 0;
 }

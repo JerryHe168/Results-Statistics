@@ -6,6 +6,8 @@
 #include "DataProcessor.h"
 #include "ExcelReader.h"
 #include "CsvReader.h"
+#include "AsyncOperation.h"
+#include "ProgressDialog.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -25,9 +27,14 @@ public:
     std::vector<ScoreEntry> m_scoreEntries;
     std::vector<ResultEntry> m_results;
 
+    AsyncOperation* m_pCurrentAsyncOp;
+
     BEGIN_MSG_MAP(CStatsPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_ASYNC_COMPLETE, OnAsyncComplete)
+        MESSAGE_HANDLER(WM_ASYNC_ERROR, OnAsyncError)
+        MESSAGE_HANDLER(WM_ASYNC_CANCELLED, OnAsyncCancelled)
         COMMAND_ID_HANDLER(IDC_BTN_TEMPLATE, OnBtnTemplate)
         COMMAND_ID_HANDLER(IDC_BTN_STATISTICS, OnBtnStatistics)
         COMMAND_ID_HANDLER(IDC_BTN_EXPORT, OnBtnExport)
@@ -42,6 +49,10 @@ public:
     LRESULT OnBtnStatistics(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnBtnExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+    LRESULT OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
+    LRESULT OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+
     void LayoutControls();
     void InitializeListView();
     void ClearListView();
@@ -55,4 +66,6 @@ public:
 
     bool ExportResults(const std::wstring& filePath);
     bool ExportResultsToCsv(const std::wstring& filePath);
+
+    void CleanupAsyncOp();
 };

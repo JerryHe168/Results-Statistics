@@ -6,12 +6,22 @@
 
 #pragma comment(lib, "ole32.lib")
 
-CMainFrame::CMainFrame() : m_hCurrentPage(NULL)
+CMainFrame::CMainFrame() : m_hCurrentPage(NULL), m_pAsyncStatistics(NULL)
 {
 }
 
 CMainFrame::~CMainFrame()
 {
+    CleanupAsyncStatistics();
+}
+
+void CMainFrame::CleanupAsyncStatistics()
+{
+    if (m_pAsyncStatistics != NULL)
+    {
+        delete m_pAsyncStatistics;
+        m_pAsyncStatistics = NULL;
+    }
 }
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
@@ -144,16 +154,69 @@ LRESULT CMainFrame::OnDoStatistics(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
         return 0;
     }
 
-    DataProcessor processor;
-    processor.ProcessData(m_playersPage.GetParticipants(),
-                          m_scoresPage.GetScoreEntries(),
-                          m_statsPage.m_results);
+    CleanupAsyncStatistics();
+    m_pAsyncStatistics = new AsyncStatistics(m_hWnd, 
+                                               m_playersPage.GetParticipants(),
+                                               m_scoresPage.GetScoreEntries());
 
+    CProgressDialog dlg;
+    dlg.SetOperation(m_pAsyncStatistics);
+    dlg.DoModal();
+
+    return 0;
+}
+
+LRESULT CMainFrame::OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    if (wParam != ASYNC_OP_STATISTICS)
+    {
+        return 0;
+    }
+
+    if (m_pAsyncStatistics == NULL)
+    {
+        return 0;
+    }
+
+    m_statsPage.m_results = m_pAsyncStatistics->GetResults();
     m_statsPage.UpdateListViewWithResults();
 
     int nCount = (int)m_statsPage.m_results.size();
     std::wstring strMsg = L"统计完成！共 " + std::to_wstring(nCount) + L" 条记录。";
     m_statsPage.MessageBox(strMsg.c_str(), L"提示", MB_OK | MB_ICONINFORMATION);
+
+    CleanupAsyncStatistics();
+
+    return 0;
+}
+
+LRESULT CMainFrame::OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+{
+    if (wParam != ASYNC_OP_STATISTICS)
+    {
+        return 0;
+    }
+
+    std::wstring* pError = (std::wstring*)lParam;
+    if (pError != NULL)
+    {
+        m_statsPage.MessageBox(pError->c_str(), L"错误", MB_OK | MB_ICONERROR);
+        delete pError;
+    }
+
+    CleanupAsyncStatistics();
+
+    return 0;
+}
+
+LRESULT CMainFrame::OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    if (wParam != ASYNC_OP_STATISTICS)
+    {
+        return 0;
+    }
+
+    CleanupAsyncStatistics();
 
     return 0;
 }
