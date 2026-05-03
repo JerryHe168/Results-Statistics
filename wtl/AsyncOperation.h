@@ -20,11 +20,12 @@ public:
     void Cancel();
     bool IsCancelled() const { return m_bCancelled; }
     bool IsRunning() const { return m_bRunning; }
+    bool IsCompleted() const { return m_bCompleted; }
+    bool HasError() const { return m_bError; }
+    const std::wstring& GetErrorMessage() const { return m_errorMessage; }
 
-    void SetProgress(int current, int total, const std::wstring& message = L"");
-    void NotifyComplete();
-    void NotifyError(const std::wstring& errorMessage);
-    void NotifyCancelled();
+    int GetProgress() const { return m_progress; }
+    const std::wstring& GetProgressMessage() const { return m_progressMessage; }
 
     virtual void Run() = 0;
 
@@ -33,7 +34,15 @@ protected:
     HWND m_hNotifyWnd;
     volatile bool m_bCancelled;
     volatile bool m_bRunning;
+    volatile bool m_bCompleted;
+    volatile bool m_bError;
+    std::wstring m_errorMessage;
+    volatile int m_progress;
+    std::wstring m_progressMessage;
     HANDLE m_hThread;
+
+    void SetProgress(int current, int total, const std::wstring& message = L"");
+    void SetError(const std::wstring& errorMessage);
 
     static unsigned int __stdcall ThreadProc(void* pParam);
 };
