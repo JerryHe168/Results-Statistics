@@ -31,7 +31,7 @@ LRESULT CNavigationBar::OnBtnPlayers(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 {
     m_nSelectedButton = 0;
     UpdateButtonStates();
-    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(IDC_BTN_PLAYERS, BN_CLICKED), (LPARAM)m_btnPlayers.m_hWnd);
+    ::SendMessage(GetParent(), WM_SWITCH_PAGE, PAGE_PLAYERS, 0);
     return 0;
 }
 
@@ -39,7 +39,7 @@ LRESULT CNavigationBar::OnBtnScores(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 {
     m_nSelectedButton = 1;
     UpdateButtonStates();
-    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(IDC_BTN_SCORES, BN_CLICKED), (LPARAM)m_btnScores.m_hWnd);
+    ::SendMessage(GetParent(), WM_SWITCH_PAGE, PAGE_SCORES, 0);
     return 0;
 }
 
@@ -47,7 +47,7 @@ LRESULT CNavigationBar::OnBtnStats(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 {
     m_nSelectedButton = 2;
     UpdateButtonStates();
-    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(IDC_BTN_STATS, BN_CLICKED), (LPARAM)m_btnStats.m_hWnd);
+    ::SendMessage(GetParent(), WM_SWITCH_PAGE, PAGE_STATS, 0);
     return 0;
 }
 

@@ -64,21 +64,20 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
     return 1;
 }
 
-LRESULT CMainFrame::OnBtnPlayers(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainFrame::OnSwitchPage(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
-    SwitchPage(m_playersPage.m_hWnd);
-    return 0;
-}
-
-LRESULT CMainFrame::OnBtnScores(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-    SwitchPage(m_scoresPage.m_hWnd);
-    return 0;
-}
-
-LRESULT CMainFrame::OnBtnStats(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-    SwitchPage(m_statsPage.m_hWnd);
+    switch (wParam)
+    {
+    case PAGE_PLAYERS:
+        SwitchPage(m_playersPage.m_hWnd);
+        break;
+    case PAGE_SCORES:
+        SwitchPage(m_scoresPage.m_hWnd);
+        break;
+    case PAGE_STATS:
+        SwitchPage(m_statsPage.m_hWnd);
+        break;
+    }
     return 0;
 }
 
