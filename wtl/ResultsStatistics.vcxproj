@@ -164,6 +164,8 @@
     <ClCompile Include="ExcelSession.cpp" />
     <ClCompile Include="ExcelReader.cpp" />
     <ClCompile Include="CsvReader.cpp" />
+    <ClCompile Include="DataProcessor.cpp" />
+    <ClCompile Include="ExcelWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrame.h" />
@@ -178,6 +180,8 @@
     <ClInclude Include="ExcelSession.h" />
     <ClInclude Include="ExcelReader.h" />
     <ClInclude Include="CsvReader.h" />
+    <ClInclude Include="DataProcessor.h" />
+    <ClInclude Include="ExcelWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ResultsStatistics.rc" />

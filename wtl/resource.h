@@ -17,6 +17,7 @@
 #define IDC_BTN_IMPORT_SCORES          402
 #define IDC_LIST_SCORES                403
 
+#define IDC_BTN_TEMPLATE               500
 #define IDC_BTN_STATISTICS             501
 #define IDC_BTN_EXPORT                 502
 #define IDC_LIST_STATS                 503
