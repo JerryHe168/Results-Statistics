@@ -164,51 +164,22 @@ bool CScoresPage::ShowFileDialog()
     return false;
 }
 
-ImportFileFormatScores CScoresPage::DetectFileFormat(const std::wstring& filePath)
-{
-    std::wstring lowerPath = filePath;
-    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
-
-    if (lowerPath.length() >= 4)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
-        if (ext == L".csv")
-        {
-            return ImportFileFormatScores::Csv;
-        }
-        if (ext == L".xls")
-        {
-            return ImportFileFormatScores::Excel;
-        }
-    }
-
-    if (lowerPath.length() >= 5)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
-        if (ext == L".xlsx")
-        {
-            return ImportFileFormatScores::Excel;
-        }
-    }
-
-    return ImportFileFormatScores::Unknown;
-}
-
 bool CScoresPage::ImportFile(const std::wstring& filePath)
 {
     m_headers.clear();
     m_data.clear();
 
-    ImportFileFormatScores format = DetectFileFormat(filePath);
+    DataProcessor processor;
+    FileFormat format = processor.DetectFileFormat(filePath);
 
     switch (format)
     {
-    case ImportFileFormatScores::Excel:
+    case FileFormat::Excel:
         {
             ExcelReader reader;
             return reader.ReadRawData(filePath, m_headers, m_data);
         }
-    case ImportFileFormatScores::Csv:
+    case FileFormat::Csv:
         {
             CsvReader reader;
             return reader.ReadRawData(filePath, m_headers, m_data);

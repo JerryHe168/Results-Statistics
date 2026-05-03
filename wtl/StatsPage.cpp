@@ -80,14 +80,15 @@ LRESULT CStatsPage::OnBtnExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
     std::wstring filePath;
     if (ShowFileDialogForExport(filePath))
     {
-        ImportFileFormatStats format = DetectFileFormat(filePath);
+        DataProcessor processor;
+        FileFormat format = processor.DetectFileFormat(filePath);
 
         bool success = false;
-        if (format == ImportFileFormatStats::Excel)
+        if (format == FileFormat::Excel)
         {
             success = ExportResults(filePath);
         }
-        else if (format == ImportFileFormatStats::Csv)
+        else if (format == FileFormat::Csv)
         {
             success = ExportResultsToCsv(filePath);
         }
@@ -291,48 +292,19 @@ bool CStatsPage::ShowFileDialogForExport(std::wstring& filePath)
     return false;
 }
 
-ImportFileFormatStats CStatsPage::DetectFileFormat(const std::wstring& filePath)
-{
-    std::wstring lowerPath = filePath;
-    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::towlower);
-
-    if (lowerPath.length() >= 4)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 4);
-        if (ext == L".csv")
-        {
-            return ImportFileFormatStats::Csv;
-        }
-        if (ext == L".xls")
-        {
-            return ImportFileFormatStats::Excel;
-        }
-    }
-
-    if (lowerPath.length() >= 5)
-    {
-        std::wstring ext = lowerPath.substr(lowerPath.length() - 5);
-        if (ext == L".xlsx")
-        {
-            return ImportFileFormatStats::Excel;
-        }
-    }
-
-    return ImportFileFormatStats::Unknown;
-}
-
 bool CStatsPage::ImportTemplate(const std::wstring& filePath)
 {
     m_templateHeaders.clear();
 
-    ImportFileFormatStats format = DetectFileFormat(filePath);
+    DataProcessor processor;
+    FileFormat format = processor.DetectFileFormat(filePath);
 
     std::vector<std::wstring> headers;
     std::vector<std::vector<std::wstring>> data;
 
     switch (format)
     {
-    case ImportFileFormatStats::Excel:
+    case FileFormat::Excel:
         {
             ExcelReader reader;
             if (!reader.ReadRawData(filePath, headers, data))
@@ -341,7 +313,7 @@ bool CStatsPage::ImportTemplate(const std::wstring& filePath)
             }
         }
         break;
-    case ImportFileFormatStats::Csv:
+    case FileFormat::Csv:
         {
             CsvReader reader;
             if (!reader.ReadRawData(filePath, headers, data))
