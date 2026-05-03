@@ -16,3 +16,8 @@
 #define IDI_APP_ICON                   401
 
 #define IDR_MAINFRAME                  501
+
+#define WM_SWITCH_PAGE                 (WM_USER + 100)
+#define PAGE_PLAYERS                   0
+#define PAGE_SCORES                    1
+#define PAGE_STATS                     2
