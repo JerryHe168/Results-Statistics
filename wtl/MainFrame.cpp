@@ -49,10 +49,9 @@ LRESULT CMainFrame::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     RECT rcClient;
     GetClientRect(&rcClient);
 
-    int nNavBarWidth = 200;
-    int nNavBarX = rcClient.right - nNavBarWidth;
+    int nNavBarWidth = NAVBAR_WIDTH;
 
-    m_navBar.SetWindowPos(NULL, nNavBarX, 0, nNavBarWidth, rcClient.bottom, SWP_NOZORDER);
+    m_navBar.SetWindowPos(NULL, 0, 0, nNavBarWidth, rcClient.bottom, SWP_NOZORDER);
 
     LayoutPages();
 
@@ -110,8 +109,9 @@ void CMainFrame::LayoutPages()
     RECT rcClient;
     GetClientRect(&rcClient);
 
-    int nNavBarWidth = 200;
+    int nNavBarWidth = NAVBAR_WIDTH;
+    int nPageX = nNavBarWidth;
     int nPageWidth = rcClient.right - nNavBarWidth;
 
-    ::SetWindowPos(m_hCurrentPage, NULL, 0, 0, nPageWidth, rcClient.bottom, SWP_NOZORDER);
+    ::SetWindowPos(m_hCurrentPage, NULL, nPageX, 0, nPageWidth, rcClient.bottom, SWP_NOZORDER);
 }
