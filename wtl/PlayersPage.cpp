@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "PlayersPage.h"
 
 CPlayersPage::CPlayersPage()
@@ -12,6 +12,7 @@ CPlayersPage::~CPlayersPage()
 LRESULT CPlayersPage::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
     m_staticTitle = GetDlgItem(IDC_STATIC_PLAYERS);
+    m_staticTitle.SetWindowText(L"选手页面");
     LayoutControls();
     return TRUE;
 }

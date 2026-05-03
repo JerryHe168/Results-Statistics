@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "StatsPage.h"
 
 CStatsPage::CStatsPage()
@@ -12,6 +12,7 @@ CStatsPage::~CStatsPage()
 LRESULT CStatsPage::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
     m_staticTitle = GetDlgItem(IDC_STATIC_STATS);
+    m_staticTitle.SetWindowText(L"统计页面");
     LayoutControls();
     return TRUE;
 }

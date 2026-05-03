@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "MainFrame.h"
 
 CMainFrame::CMainFrame() : m_hCurrentPage(NULL)
@@ -26,6 +26,8 @@ BOOL CMainFrame::OnIdle()
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
     m_hWndClient = NULL;
+
+    SetWindowText(L"成绩统计程序");
 
     m_navBar.Create(m_hWnd, IDD_NAVIGATION_BAR);
     m_navBar.ShowWindow(SW_SHOW);

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ScoresPage.h"
 
 CScoresPage::CScoresPage()
@@ -12,6 +12,7 @@ CScoresPage::~CScoresPage()
 LRESULT CScoresPage::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
     m_staticTitle = GetDlgItem(IDC_STATIC_SCORES);
+    m_staticTitle.SetWindowText(L"成绩页面");
     LayoutControls();
     return TRUE;
 }
