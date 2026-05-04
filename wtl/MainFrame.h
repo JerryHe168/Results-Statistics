@@ -32,9 +32,6 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SWITCH_PAGE, OnSwitchPage)
         MESSAGE_HANDLER(WM_DO_STATISTICS, OnDoStatistics)
-        MESSAGE_HANDLER(WM_ASYNC_COMPLETE, OnAsyncComplete)
-        MESSAGE_HANDLER(WM_ASYNC_ERROR, OnAsyncError)
-        MESSAGE_HANDLER(WM_ASYNC_CANCELLED, OnAsyncCancelled)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
     END_MSG_MAP()
@@ -53,10 +50,6 @@ public:
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
     LRESULT OnSwitchPage(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnDoStatistics(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-
-    LRESULT OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
-    LRESULT OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
     void SwitchPage(HWND hPage);
     void LayoutPages();

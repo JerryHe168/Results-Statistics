@@ -155,65 +155,36 @@ LRESULT CMainFrame::OnDoStatistics(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
     }
 
     CleanupAsyncStatistics();
-    m_pAsyncStatistics = new AsyncStatistics(m_hWnd, 
-                                               m_playersPage.GetParticipants(),
-                                               m_scoresPage.GetScoreEntries());
+    AsyncStatistics* pStatistics = new AsyncStatistics(m_hWnd, 
+                                                         m_playersPage.GetParticipants(),
+                                                         m_scoresPage.GetScoreEntries());
+    m_pAsyncStatistics = pStatistics;
 
     CProgressDialog dlg;
     dlg.SetOperation(m_pAsyncStatistics);
-    dlg.DoModal();
+    INT_PTR nResult = dlg.DoModal();
 
-    return 0;
-}
-
-LRESULT CMainFrame::OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_STATISTICS)
+    if (nResult == IDOK)
     {
-        return 0;
+        m_statsPage.m_results = pStatistics->GetResults();
+        m_statsPage.UpdateListViewWithResults();
+
+        int nCount = (int)m_statsPage.m_results.size();
+        std::wstring strMsg = L"统计完成！共 " + std::to_wstring(nCount) + L" 条记录。";
+        m_statsPage.MessageBox(strMsg.c_str(), L"提示", MB_OK | MB_ICONINFORMATION);
     }
-
-    if (m_pAsyncStatistics == NULL)
+    else if (nResult == IDABORT)
     {
-        return 0;
+        std::wstring errorMsg = dlg.GetErrorMessage();
+        if (errorMsg.empty())
+        {
+            errorMsg = L"统计失败！";
+        }
+        m_statsPage.MessageBox(errorMsg.c_str(), L"错误", MB_OK | MB_ICONERROR);
     }
-
-    m_statsPage.m_results = m_pAsyncStatistics->GetResults();
-    m_statsPage.UpdateListViewWithResults();
-
-    int nCount = (int)m_statsPage.m_results.size();
-    std::wstring strMsg = L"统计完成！共 " + std::to_wstring(nCount) + L" 条记录。";
-    m_statsPage.MessageBox(strMsg.c_str(), L"提示", MB_OK | MB_ICONINFORMATION);
-
-    CleanupAsyncStatistics();
-
-    return 0;
-}
-
-LRESULT CMainFrame::OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_STATISTICS)
+    else if (nResult == IDCANCEL)
     {
-        return 0;
-    }
-
-    std::wstring* pError = (std::wstring*)lParam;
-    if (pError != NULL)
-    {
-        m_statsPage.MessageBox(pError->c_str(), L"错误", MB_OK | MB_ICONERROR);
-        delete pError;
-    }
-
-    CleanupAsyncStatistics();
-
-    return 0;
-}
-
-LRESULT CMainFrame::OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-    if (wParam != ASYNC_OP_STATISTICS)
-    {
-        return 0;
+        m_statsPage.MessageBox(L"统计已取消。", L"提示", MB_OK | MB_ICONINFORMATION);
     }
 
     CleanupAsyncStatistics();

@@ -32,9 +32,6 @@ public:
     BEGIN_MSG_MAP(CStatsPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_ASYNC_COMPLETE, OnAsyncComplete)
-        MESSAGE_HANDLER(WM_ASYNC_ERROR, OnAsyncError)
-        MESSAGE_HANDLER(WM_ASYNC_CANCELLED, OnAsyncCancelled)
         COMMAND_ID_HANDLER(IDC_BTN_TEMPLATE, OnBtnTemplate)
         COMMAND_ID_HANDLER(IDC_BTN_STATISTICS, OnBtnStatistics)
         COMMAND_ID_HANDLER(IDC_BTN_EXPORT, OnBtnExport)
@@ -48,10 +45,6 @@ public:
     LRESULT OnBtnTemplate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnBtnStatistics(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnBtnExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
-    LRESULT OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
-    LRESULT OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
     void LayoutControls();
     void InitializeListView();

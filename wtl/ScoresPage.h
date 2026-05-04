@@ -30,9 +30,6 @@ public:
     BEGIN_MSG_MAP(CScoresPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_ASYNC_COMPLETE, OnAsyncComplete)
-        MESSAGE_HANDLER(WM_ASYNC_ERROR, OnAsyncError)
-        MESSAGE_HANDLER(WM_ASYNC_CANCELLED, OnAsyncCancelled)
         COMMAND_ID_HANDLER(IDC_BTN_IMPORT_SCORES, OnBtnImport)
     END_MSG_MAP()
 
@@ -42,10 +39,6 @@ public:
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnBtnImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
-    LRESULT OnAsyncComplete(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnAsyncError(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
-    LRESULT OnAsyncCancelled(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
     void LayoutControls();
     void InitializeListView();
